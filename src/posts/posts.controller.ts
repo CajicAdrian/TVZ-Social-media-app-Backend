@@ -16,7 +16,7 @@ import { GetUser } from 'src/auth/get-user.decorator';
 import { User } from 'src/auth/user.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { GetPostsFilterDto } from './dto/get-posts-filter.dto';
-import { Post } from './post.entity';
+import type { Post as PostEntity } from './post.entity';
 import { PostsService } from './posts.service';
 
 @Controller('posts')
@@ -28,7 +28,7 @@ export class PostsController {
   getPosts(
     @Query(ValidationPipe) filterDto: GetPostsFilterDto,
     @GetUser() user: User,
-  ): Promise<Post[]> {
+  ): Promise<PostEntity[]> {
     return this.postsService.getPosts(filterDto, user);
   }
 
@@ -36,7 +36,7 @@ export class PostsController {
   getPostById(
     @Param('id', ParseIntPipe) id: number,
     @GetUser() user: User,
-  ): Promise<Post> {
+  ): Promise<PostEntity> {
     return this.postsService.getPostById(id, user);
   }
 
@@ -45,7 +45,7 @@ export class PostsController {
   createPost(
     @Body() createPostDto: CreatePostDto,
     @GetUser() user: User,
-  ): Promise<Post> {
+  ): Promise<PostEntity> {
     return this.postsService.createPost(createPostDto, user);
   }
 

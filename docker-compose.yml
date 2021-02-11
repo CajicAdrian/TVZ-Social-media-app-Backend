@@ -1,0 +1,12 @@
+version: '3'
+services:
+  tasks-database:
+    container_name: social-media-db
+    image: postgres:10-alpine
+    restart: always
+    ports:
+      - '47333:5432'
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: social-media-db
