@@ -5,9 +5,15 @@ import { PostsModule } from './posts/posts.module';
 import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeormConfig } from './config/typeorm.config';
+import { ImagesModule } from './images/images.module';
 
 @Module({
-  imports: [PostsModule, AuthModule, TypeOrmModule.forRoot(typeormConfig)],
+  imports: [
+    PostsModule,
+    AuthModule,
+    TypeOrmModule.forRoot(typeormConfig),
+    ImagesModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
