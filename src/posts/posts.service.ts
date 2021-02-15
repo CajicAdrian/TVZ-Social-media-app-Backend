@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/auth/user.entity';
 import { ImageRepository } from 'src/images/image.repository';
 import { CreatePostDto } from './dto/create-post.dto';
-import { GetPostsFilterDto } from './dto/get-posts-filter.dto';
 import { Post } from './post.entity';
 import { PostRepository } from './post.repository';
 
@@ -15,8 +14,8 @@ export class PostsService {
     @InjectRepository(ImageRepository) private imageRepository: ImageRepository,
   ) {}
 
-  async getPosts(filterDto: GetPostsFilterDto, user: User): Promise<Post[]> {
-    return this.postRepository.getPosts(filterDto, user);
+  async getPosts(): Promise<Post[]> {
+    return this.postRepository.getPosts();
   }
 
   async getPostById(id: number, user: User): Promise<Post> {

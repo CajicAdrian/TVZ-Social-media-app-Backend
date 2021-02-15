@@ -4,7 +4,6 @@ import { Image } from 'src/images/image.entity';
 import { ImageRepository } from 'src/images/image.repository';
 import { EntityRepository, Repository } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
-import { GetPostsFilterDto } from './dto/get-posts-filter.dto';
 import { Post } from './post.entity';
 
 @EntityRepository(Post)
@@ -14,8 +13,7 @@ export class PostRepository extends Repository<Post> {
   ) {
     super();
   }
-  async getPosts(filterDto: GetPostsFilterDto, user: User): Promise<Post[]> {
-    const { search } = filterDto;
+  async getPosts(): Promise<Post[]> {
     const query = await this.createQueryBuilder('post')
       .leftJoinAndSelect('post.images', 'images')
       .getMany();
