@@ -6,4 +6,7 @@ export class CreatePostDto {
 
   @IsNotEmpty()
   description: string;
+
+  @IsNotEmpty()
+  imageId: number;
 }

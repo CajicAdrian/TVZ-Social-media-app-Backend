@@ -3,10 +3,9 @@ import {
   Post,
   UseInterceptors,
   UploadedFile,
-  UploadedFiles,
   Get,
 } from '@nestjs/common';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ImagesService } from './images.service';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -16,10 +15,6 @@ import type { Image } from './image.entity';
 @Controller('images')
 export class ImagesController {
   constructor(private imagesService: ImagesService) {}
-  @Get()
-  re() {
-    return 'adsas';
-  }
   @Post('/user-image')
   @UseInterceptors(
     FileInterceptor('user', {
@@ -39,7 +34,7 @@ export class ImagesController {
   }
 
   @UseInterceptors(
-    FilesInterceptor('images', undefined, {
+    FileInterceptor('image', {
       storage: diskStorage({
         destination: './static/images/post-images',
         filename: (_req, file, cb) => {
@@ -50,9 +45,14 @@ export class ImagesController {
     }),
   )
   @Post('/post-images')
-  async uploadPostImages(
-    @UploadedFiles() images: Express.Multer.File[],
-  ): Promise<Image[]> {
-    return this.imagesService.createImages(images);
+  async uploadPostImage(
+    @UploadedFile() images: Express.Multer.File,
+  ): Promise<Image> {
+    return this.imagesService.createImage(images);
+  }
+
+  @Get()
+  async findImage(imageId: number): Promise<Image> {
+    return this.imagesService.findImage(imageId);
   }
 }

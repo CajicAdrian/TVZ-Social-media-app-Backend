@@ -19,7 +19,7 @@ export class ImageRepository extends Repository<Image> {
   async createImages(images: Express.Multer.File[]): Promise<Image[]> {
     const imageEntities = [];
 
-    images.map(async (image) => {
+    await images.forEach(async (image) => {
       imageEntities.push(await this.createImage(image));
     });
 

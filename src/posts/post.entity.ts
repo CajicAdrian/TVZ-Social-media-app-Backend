@@ -1,9 +1,12 @@
 import { User } from 'src/auth/user.entity';
+import { Image } from 'src/images/image.entity';
 import {
   BaseEntity,
   Column,
   Entity,
+  JoinTable,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -18,9 +21,10 @@ export class Post extends BaseEntity {
   @Column()
   description: string;
 
-  @ManyToOne((type) => User, (user) => user.posts, { eager: false })
+  @JoinTable()
+  @ManyToOne(() => User, (user) => user.posts, { eager: false })
   user: User;
 
-  @Column()
-  userId: number;
+  @OneToMany(() => Image, (image) => image.posts, { cascade: true })
+  images: Image[];
 }

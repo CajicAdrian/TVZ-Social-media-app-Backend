@@ -5,9 +5,11 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   Unique,
+  OneToOne,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Post } from 'src/posts/post.entity';
+import { Image } from 'src/images/image.entity';
 
 @Entity()
 @Unique(['username'])
@@ -24,7 +26,10 @@ export class User extends BaseEntity {
   @Column()
   salt: string;
 
-  @OneToMany((type) => Post, (post) => post.user, { eager: true })
+  @OneToOne(() => Image, (image) => image.users)
+  images: Image;
+
+  @OneToMany(() => Post, (post) => post.user, { eager: true })
   posts: Post[];
 
   async validatePassword(password: string): Promise<boolean> {

@@ -16,4 +16,7 @@ export class ImagesService {
   async createImages(images: Express.Multer.File[]): Promise<Image[]> {
     return this.imageRepository.createImages(images);
   }
+  async findImage(imageId: number): Promise<Image> {
+    return this.imageRepository.findOne(imageId);
+  }
 }
