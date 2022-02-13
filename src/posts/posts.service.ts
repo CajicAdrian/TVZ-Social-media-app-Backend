@@ -1,8 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/auth/user.entity';
 import { ImageRepository } from 'src/images/image.repository';
 import { CreatePostDto } from './dto/create-post.dto';
+import { EditPostDto } from './dto/edit-post.dto';
 import { Post } from './post.entity';
 import { PostRepository } from './post.repository';
 
@@ -18,9 +23,9 @@ export class PostsService {
     return this.postRepository.getPosts();
   }
 
-  async getPostById(id: number, user: User): Promise<Post> {
-    const found = await this.postRepository.findOne({
-      where: { id, userId: user.id },
+  async getPostById(id: number): Promise<Post> {
+    const found = await this.postRepository.findOne(id, {
+      relations: ['user', 'images'],
     });
 
     if (!found) {
@@ -32,5 +37,32 @@ export class PostsService {
   async createPost(createPostDto: CreatePostDto, user: User): Promise<Post> {
     const images = [await this.imageRepository.findOne(createPostDto.imageId)];
     return this.postRepository.createPost(createPostDto, user, images);
+  }
+
+  async updatePostById(
+    id: number,
+    user: User,
+    changes: EditPostDto,
+  ): Promise<void> {
+    const post = await this.getPostById(id);
+
+    if (post.user.id !== user.id) {
+      throw new ForbiddenException("Cannot edit other user's posts");
+    }
+
+    await this.postRepository.update(id, changes);
+  }
+
+  async deletePostById(id: number, user: User): Promise<void> {
+    const post = await this.getPostById(id);
+
+    if (post.user.id !== user.id) {
+      throw new ForbiddenException("Cannot delete other user's posts");
+    }
+
+    await Promise.all(
+      post.images.map((img) => this.imageRepository.delete(img.imageId)),
+    );
+    await this.postRepository.delete(id);
   }
 }
