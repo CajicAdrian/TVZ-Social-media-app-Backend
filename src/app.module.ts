@@ -8,6 +8,8 @@ import { typeormConfig } from './config/typeorm.config';
 import { ImagesModule } from './images/images.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { TcpModule } from './tcp/tcp.module';
+import { UdpModule } from './udp/udp.module';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { join } from 'path';
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'static'),
     }),
+    TcpModule.forRoot({ address: '127.0.0.1', port: 3001 }),
+    UdpModule.forRoot({ address: '127.0.0.1', port: 3002 }),
   ],
   controllers: [AppController],
   providers: [AppService],
