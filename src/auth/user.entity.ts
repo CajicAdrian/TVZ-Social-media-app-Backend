@@ -11,6 +11,7 @@ import * as bcrypt from 'bcrypt';
 import { Post } from 'src/posts/post.entity';
 import { Image } from 'src/images/image.entity';
 import { Comment } from 'src/comments/comment.entity';
+import { Like } from 'src/likes/like.entity';
 
 @Entity()
 @Unique(['username'])
@@ -35,6 +36,9 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Comment, (comment) => comment.user, { eager: false })
   comments: Comment[];
+
+  @OneToMany(() => Like, (like) => like.user, { eager: false })
+  likes: Like[];
 
   async validatePassword(password: string): Promise<boolean> {
     const hash = await bcrypt.hash(password, this.salt);

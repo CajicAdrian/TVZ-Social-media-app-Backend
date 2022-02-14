@@ -19,8 +19,8 @@ export class PostsService {
     @InjectRepository(ImageRepository) private imageRepository: ImageRepository,
   ) {}
 
-  async getPosts(): Promise<Post[]> {
-    return this.postRepository.getPosts();
+  async getPosts(user: User): Promise<Post[]> {
+    return this.postRepository.getPosts(user);
   }
 
   async getPostById(id: number): Promise<Post> {

@@ -15,12 +15,24 @@ export class PostRepository extends Repository<Post> {
   ) {
     super();
   }
-  async getPosts(): Promise<Post[]> {
-    const query = await this.createQueryBuilder('post')
+  async getPosts(user?: User): Promise<Post[]> {
+    let query = this.createQueryBuilder('post')
       .leftJoinAndSelect('post.images', 'images')
-      .loadRelationCountAndMap('post.commentCount', 'post.comments')
-      .getMany();
-    return query;
+      .loadRelationCountAndMap('post.likeCount', 'post.likes')
+      .loadRelationCountAndMap('post.commentCount', 'post.comments');
+
+    if (user) {
+      query = query.loadRelationCountAndMap(
+        'post.likedByCurrentUser',
+        'post.likes',
+        'ourLike',
+        (qb) => {
+          return qb.andWhere('ourLike.userId = :ourUser', { ourUser: user.id });
+        },
+      );
+    }
+
+    return query.getMany();
   }
 
   async getCommentIds(id: number): Promise<number[]> {

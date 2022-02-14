@@ -10,6 +10,8 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { TcpModule } from './tcp/tcp.module';
 import { UdpModule } from './udp/udp.module';
+import { CommentsModule } from './comments/comments.module';
+import { LikesModule } from './likes/likes.module';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { UdpModule } from './udp/udp.module';
     }),
     TcpModule.forRoot({ address: '127.0.0.1', port: 3001 }),
     UdpModule.forRoot({ address: '127.0.0.1', port: 3002 }),
+    CommentsModule,
+    LikesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

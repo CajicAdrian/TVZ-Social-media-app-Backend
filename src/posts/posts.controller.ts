@@ -25,8 +25,8 @@ export class PostsController {
   constructor(private postsService: PostsService) {}
 
   @Get()
-  getPosts(): Promise<PostEntity[]> {
-    return this.postsService.getPosts();
+  async getPosts(@GetUser() user: User) {
+    return this.postsService.getPosts(user);
   }
 
   @Get('/:id')

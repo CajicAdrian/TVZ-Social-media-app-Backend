@@ -1,6 +1,7 @@
 import { User } from 'src/auth/user.entity';
 import { Comment } from 'src/comments/comment.entity';
 import { Image } from 'src/images/image.entity';
+import { Like } from 'src/likes/like.entity';
 import {
   BaseEntity,
   Column,
@@ -29,6 +30,10 @@ export class Post extends BaseEntity {
   @JoinTable()
   @OneToMany(() => Comment, (comment) => comment.post, { cascade: true })
   comments: Comment[];
+
+  @JoinTable()
+  @OneToMany(() => Like, (like) => like.post, { cascade: true })
+  likes: Like[];
 
   @OneToMany(() => Image, (image) => image.posts, { cascade: true })
   images: Image[];
