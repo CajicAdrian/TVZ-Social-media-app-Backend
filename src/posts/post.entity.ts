@@ -1,4 +1,5 @@
 import { User } from 'src/auth/user.entity';
+import { Comment } from 'src/comments/comment.entity';
 import { Image } from 'src/images/image.entity';
 import {
   BaseEntity,
@@ -24,6 +25,10 @@ export class Post extends BaseEntity {
   @JoinTable()
   @ManyToOne(() => User, (user) => user.posts, { eager: false })
   user: User;
+
+  @JoinTable()
+  @OneToMany(() => Comment, (comment) => comment.post, { cascade: true })
+  comments: Comment[];
 
   @OneToMany(() => Image, (image) => image.posts, { cascade: true })
   images: Image[];

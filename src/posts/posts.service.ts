@@ -34,6 +34,10 @@ export class PostsService {
     return found;
   }
 
+  async getCommentIds(id: number): Promise<number[]> {
+    return this.postRepository.getCommentIds(id);
+  }
+
   async createPost(createPostDto: CreatePostDto, user: User): Promise<Post> {
     const images = [await this.imageRepository.findOne(createPostDto.imageId)];
     return this.postRepository.createPost(createPostDto, user, images);
