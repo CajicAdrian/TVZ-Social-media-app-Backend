@@ -64,6 +64,14 @@ export class PostsService {
       throw new ForbiddenException("Cannot delete other user's posts");
     }
 
+    await this.postRepository.manager.query(
+      'DELETE FROM "comment" WHERE "postId" = $1',
+      [post.id],
+    );
+    await this.postRepository.manager.query(
+      'DELETE FROM "like" WHERE "postId" = $1',
+      [post.id],
+    );
     await Promise.all(
       post.images.map((img) => this.imageRepository.delete(img.imageId)),
     );
