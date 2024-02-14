@@ -28,6 +28,9 @@ export class User extends BaseEntity {
   @Column()
   salt: string;
 
+  @Column({ default: 0.0 })
+  pepper: string;
+
   @OneToOne(() => Image, (image) => image.users)
   images: Image;
 
