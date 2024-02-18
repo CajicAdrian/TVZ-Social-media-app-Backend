@@ -12,9 +12,15 @@ import { TcpModule } from './tcp/tcp.module';
 import { UdpModule } from './udp/udp.module';
 import { CommentsModule } from './comments/comments.module';
 import { LikesModule } from './likes/likes.module';
+import { ConfigModule } from '@nestjs/config';
+import { configValidationSchema } from './config.schema';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      envFilePath: ['.env.dev'],
+      validationSchema: configValidationSchema,
+    }),
     PostsModule,
     AuthModule,
     TypeOrmModule.forRoot(typeormConfig),
