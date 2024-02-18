@@ -2,11 +2,13 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Param,
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -18,6 +20,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { EditPostDto } from './dto/edit-post.dto';
 import type { Post as PostEntity } from './post.entity';
 import { PostsService } from './posts.service';
+import { Role } from 'src/auth/role.enum';
 
 @Controller('posts')
 @UseGuards(AuthGuard())
@@ -44,19 +47,36 @@ export class PostsController {
   }
 
   @Patch('/:id')
-  updatePostById(
+  async updatePostById(
     @Param('id', ParseIntPipe) id: number,
     @Body() changes: EditPostDto,
     @GetUser() user: User,
   ): Promise<void> {
-    return this.postsService.updatePostById(id, user, changes);
+    const post = await this.getPostById(id);
+    if (
+      user.role === Role.ADMIN ||
+      (post.user.id === user.id && user.role === Role.USER)
+    ) {
+      return this.postsService.updatePostById(id, changes);
+    } else {
+      throw new ForbiddenException("Cannot edit other user's posts");
+    }
   }
 
   @Delete('/:id')
-  deletePostById(
+  async deletePostById(
     @Param('id', ParseIntPipe) id: number,
     @GetUser() user: User,
   ): Promise<void> {
-    return this.postsService.deletePostById(id, user);
+    const post = await this.getPostById(id);
+
+    if (
+      user.role === Role.ADMIN ||
+      (post.user.id === user.id && user.role === Role.USER)
+    ) {
+      return this.postsService.deletePostById(id);
+    } else {
+      throw new ForbiddenException("Cannot delete other user's posts");
+    }
   }
 }
