@@ -14,6 +14,7 @@ import { CommentsModule } from './comments/comments.module';
 import { LikesModule } from './likes/likes.module';
 import { ConfigModule } from '@nestjs/config';
 import { configValidationSchema } from './config.schema';
+import { EnvModule } from './env/env.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { configValidationSchema } from './config.schema';
     UdpModule.forRoot({ address: '127.0.0.1', port: 3002 }),
     CommentsModule,
     LikesModule,
+    EnvModule,
   ],
   controllers: [AppController],
   providers: [AppService],
