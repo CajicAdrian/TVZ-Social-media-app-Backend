@@ -24,7 +24,7 @@ export class AuthController {
 
   @Get('/getallusers')
   @UseGuards(AuthGuard())
-  async getAllUsers(@GetUser() requestingUser: User): Promise<User[]> {
+  async getAllUsers(@GetUser() user: User): Promise<User[]> {
     return this.authService.getAllUsers();
   }
 
@@ -47,9 +47,9 @@ export class AuthController {
   async updateRole(
     @Param('id', ParseIntPipe) userId: number,
     @Body('role') newRole: Role,
-    @GetUser() requestingUser: User,
+    @GetUser() user: User,
   ): Promise<void> {
-    if (requestingUser.role !== Role.ADMIN) {
+    if (user.role !== Role.ADMIN) {
       throw new ForbiddenException(
         "You don't have permission to change user roles",
       );
@@ -61,9 +61,9 @@ export class AuthController {
   @UseGuards(AuthGuard())
   async deleteUser(
     @Param('id', ParseIntPipe) userId: number,
-    @GetUser() requestingUser: User,
+    @GetUser() user: User,
   ): Promise<void> {
-    if (requestingUser.role === Role.ADMIN || requestingUser.id === userId) {
+    if (user.role === Role.ADMIN || user.id === userId) {
       await this.authService.deleteUser(userId);
     } else {
       throw new ForbiddenException(
