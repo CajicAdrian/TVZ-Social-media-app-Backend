@@ -10,6 +10,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { EditPostDto } from './dto/edit-post.dto';
 import { Post } from './post.entity';
 import { PostRepository } from './post.repository';
+import { Role } from 'src/auth/role.enum';
 
 @Injectable()
 export class PostsService {
@@ -43,34 +44,20 @@ export class PostsService {
     return this.postRepository.createPost(createPostDto, user, images);
   }
 
-  async updatePostById(
-    id: number,
-    user: User,
-    changes: EditPostDto,
-  ): Promise<void> {
-    const post = await this.getPostById(id);
-
-    if (post.user.id !== user.id) {
-      throw new ForbiddenException("Cannot edit other user's posts");
-    }
-
+  async updatePostById(id: number, changes: EditPostDto): Promise<void> {
     await this.postRepository.update(id, changes);
   }
 
-  async deletePostById(id: number, user: User): Promise<void> {
+  async deletePostById(id: number): Promise<void> {
     const post = await this.getPostById(id);
-
-    if (post.user.id !== user.id) {
-      throw new ForbiddenException("Cannot delete other user's posts");
-    }
 
     await this.postRepository.manager.query(
       'DELETE FROM "comment" WHERE "postId" = $1',
-      [post.id],
+      [id],
     );
     await this.postRepository.manager.query(
       'DELETE FROM "like" WHERE "postId" = $1',
-      [post.id],
+      [id],
     );
     await Promise.all(
       post.images.map((img) => this.imageRepository.delete(img.imageId)),

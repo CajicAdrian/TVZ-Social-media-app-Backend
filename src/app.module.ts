@@ -12,9 +12,16 @@ import { TcpModule } from './tcp/tcp.module';
 import { UdpModule } from './udp/udp.module';
 import { CommentsModule } from './comments/comments.module';
 import { LikesModule } from './likes/likes.module';
+import { ConfigModule } from '@nestjs/config';
+import { configValidationSchema } from './config.schema';
+import { EnvModule } from './env/env.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      envFilePath: ['.env.dev'],
+      validationSchema: configValidationSchema,
+    }),
     PostsModule,
     AuthModule,
     TypeOrmModule.forRoot(typeormConfig),
@@ -26,6 +33,7 @@ import { LikesModule } from './likes/likes.module';
     UdpModule.forRoot({ address: '127.0.0.1', port: 3002 }),
     CommentsModule,
     LikesModule,
+    EnvModule,
   ],
   controllers: [AppController],
   providers: [AppService],
