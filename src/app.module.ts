@@ -20,7 +20,7 @@ import { EnvModule } from './env/env.module';
   imports: [
     ConfigModule.forRoot({
       envFilePath: ['.env.dev'],
-      validationSchema: validate,
+      validate: validate,
     }),
     PostsModule,
     AuthModule,

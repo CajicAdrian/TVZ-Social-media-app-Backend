@@ -3,12 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/auth/user.entity';
 import { Image } from 'src/images/image.entity';
 import { ImageRepository } from 'src/images/image.repository';
-import { DataSource, EntityRepository, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { Post } from './post.entity';
 
 @Injectable()
-@EntityRepository(Post)
 export class PostRepository extends Repository<Post> {
   constructor(
     @InjectRepository(ImageRepository) private imageRepository: ImageRepository,
