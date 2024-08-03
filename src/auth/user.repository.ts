@@ -33,7 +33,7 @@ export class UserRepository extends Repository<User> {
       }
     }
   }
-  ntityRepository, 
+
   async validateUserPassword(
     authCredentialsDto: AuthCredentialsDto,
   ): Promise<string> {
