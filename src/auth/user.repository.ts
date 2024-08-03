@@ -1,13 +1,14 @@
 import {
   ConflictException,
+  Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
 import { AuthCredentialsDto } from 'src/auth/dto/auth-credentials.dto';
-import { EntityRepository, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import * as bcrypt from 'bcrypt';
 import { Role } from './role.enum';
-@EntityRepository(User)
+@Injectable()
 export class UserRepository extends Repository<User> {
   async signUp(authCredentialsDto: AuthCredentialsDto, role: Role = Role.USER) {
     const { username, password } = authCredentialsDto;
@@ -32,7 +33,7 @@ export class UserRepository extends Repository<User> {
       }
     }
   }
-
+  ntityRepository, 
   async validateUserPassword(
     authCredentialsDto: AuthCredentialsDto,
   ): Promise<string> {
