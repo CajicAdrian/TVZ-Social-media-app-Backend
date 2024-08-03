@@ -25,9 +25,7 @@ export class PostsService {
   }
 
   async getPostById(id: number): Promise<Post> {
-    const found = await this.postRepository.findOne(id, {
-      relations: ['user', 'images'],
-    });
+    const found = await this.postRepository.findOne({where: {id:id}, relations:{user:true, images:true} });
 
     if (!found) {
       throw new NotFoundException(`Post with ID "${id}" not found`);
@@ -40,7 +38,7 @@ export class PostsService {
   }
 
   async createPost(createPostDto: CreatePostDto, user: User): Promise<Post> {
-    const images = [await this.imageRepository.findOne(createPostDto.imageId)];
+    const images = [await this.imageRepository.findOne({where: {imageId:createPostDto.imageId}})];
     return this.postRepository.createPost(createPostDto, user, images);
   }
 

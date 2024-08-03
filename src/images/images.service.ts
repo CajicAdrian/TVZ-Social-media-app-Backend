@@ -17,6 +17,6 @@ export class ImagesService {
     return this.imageRepository.createImages(images);
   }
   async findImage(imageId: number): Promise<Image> {
-    return this.imageRepository.findOne(imageId);
+    return this.imageRepository.findOne({where:{imageId:imageId}});
   }
 }

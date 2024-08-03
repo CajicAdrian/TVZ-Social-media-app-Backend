@@ -1,12 +1,13 @@
 import { User } from 'src/auth/user.entity';
-import { EntityRepository, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Post } from '../posts/post.entity';
 import { Like } from './like.entity';
+import { Injectable } from '@nestjs/common';
 
-@EntityRepository(Like)
+@Injectable()
 export class LikeRepository extends Repository<Like> {
-  constructor() {
-    super();
+  constructor(private dataSource: DataSource) {
+    super(Like, dataSource.createEntityManager());
   }
 
   async createLike(post: Post, user: User): Promise<Like> {

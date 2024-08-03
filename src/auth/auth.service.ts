@@ -49,7 +49,7 @@ export class AuthService {
   }
 
   async updateUserRole(userId: number, newRole: Role): Promise<void> {
-    const user = await this.userRepository.findOne(userId);
+    const user = await this.userRepository.findOne({where:{id:userId}});
 
     if (!user) {
       throw new NotFoundException(`User with ID "${userId}" not found`);
@@ -61,9 +61,7 @@ export class AuthService {
   }
 
   async deleteUser(userId: number): Promise<void> {
-    const user = await this.userRepository.findOne(userId, {
-      relations: ['posts'],
-    });
+    const user = await this.userRepository.findOne({where: {id:userId}, relations:{posts:true}});
 
     if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found`);

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/auth/user.entity';
 import { Image } from 'src/images/image.entity';
 import { ImageRepository } from 'src/images/image.repository';
-import { EntityRepository, Repository } from 'typeorm';
+import { DataSource, EntityRepository, Repository } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { Post } from './post.entity';
 
@@ -12,8 +12,9 @@ import { Post } from './post.entity';
 export class PostRepository extends Repository<Post> {
   constructor(
     @InjectRepository(ImageRepository) private imageRepository: ImageRepository,
+    private dataSource: DataSource
   ) {
-    super();
+    super(Post, dataSource.createEntityManager());
   }
   async getPosts(user?: User): Promise<Post[]> {
     let query = this.createQueryBuilder('post')

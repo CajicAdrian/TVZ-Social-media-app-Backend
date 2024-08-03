@@ -1,14 +1,15 @@
 import { User } from 'src/auth/user.entity';
 import { PostRepository } from 'src/posts/post.repository';
-import { EntityRepository, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Post } from '../posts/post.entity';
 import { Comment } from './comment.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { Injectable } from '@nestjs/common';
 
-@EntityRepository(Comment)
+@Injectable()
 export class CommentRepository extends Repository<Comment> {
-  constructor(private postRepository: PostRepository) {
-    super();
+  constructor(private postRepository: PostRepository, private dataSource: DataSource) {
+    super(Comment, dataSource.createEntityManager());
   }
 
   async getComments(postId: number): Promise<any[]> {
