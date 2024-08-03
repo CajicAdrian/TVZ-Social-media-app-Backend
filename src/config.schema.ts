@@ -1,5 +1,21 @@
-import * as Joi from '@hapi/joi';
+import { plainToInstance } from 'class-transformer';
+import { IsString, validateSync } from 'class-validator';
 
-export const configValidationSchema = Joi.object({
-  JWT_SECRET: Joi.string().required(),
-});
+export class ConfigSchema {
+  @IsString()
+  JWT_SECRET: string;
+}
+
+export function validate(config: Record<string, unknown>) {
+  const validatedConfig = plainToInstance(ConfigSchema, config, {
+    enableImplicitConversion: true,
+  });
+  const errors = validateSync(validatedConfig, {
+    skipMissingProperties: false,
+  });
+
+  if (errors.length > 0) {
+    throw new Error(errors.toString());
+  }
+  return validatedConfig;
+}

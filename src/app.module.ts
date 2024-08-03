@@ -13,14 +13,14 @@ import { UdpModule } from './udp/udp.module';
 import { CommentsModule } from './comments/comments.module';
 import { LikesModule } from './likes/likes.module';
 import { ConfigModule } from '@nestjs/config';
-import { configValidationSchema } from './config.schema';
+import { validate } from './config.schema';
 import { EnvModule } from './env/env.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       envFilePath: ['.env.dev'],
-      validationSchema: configValidationSchema,
+      validationSchema: validate,
     }),
     PostsModule,
     AuthModule,
