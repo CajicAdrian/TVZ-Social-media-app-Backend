@@ -22,10 +22,10 @@ export class Image extends BaseEntity {
   fileName: string;
 
   @JoinTable()
-  @OneToOne(() => User, (user) => user.images)
+  @OneToOne(() => User, (user) => user.images, { onDelete: 'CASCADE' })
   users: User;
 
   @JoinTable()
-  @ManyToOne(() => Post, (post) => post.images)
+  @ManyToOne(() => Post, (post) => post.images, { onDelete: 'CASCADE' })
   posts: Post;
 }

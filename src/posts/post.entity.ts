@@ -24,7 +24,10 @@ export class Post extends BaseEntity {
   description: string;
 
   @JoinTable()
-  @ManyToOne(() => User, (user) => user.posts, { eager: false })
+  @ManyToOne(() => User, (user) => user.posts, {
+    eager: false,
+    onDelete: 'CASCADE',
+  })
   user: User;
 
   @JoinTable()

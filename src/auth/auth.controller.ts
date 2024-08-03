@@ -1,10 +1,32 @@
-import { Body, Controller, Post, ValidationPipe } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  UseGuards,
+  ValidationPipe,
+} from '@nestjs/common';
 import { AuthCredentialsDto } from 'src/auth/dto/auth-credentials.dto';
 import { AuthService } from './auth.service';
+import { GetUser } from './get-user.decorator';
+import { User } from './user.entity';
+import { Role } from './role.enum';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
+
+  @Get('/getallusers')
+  @UseGuards(AuthGuard())
+  async getAllUsers(@GetUser() user: User): Promise<User[]> {
+    return this.authService.getAllUsers();
+  }
 
   @Post('/signup')
   signUp(
@@ -18,5 +40,35 @@ export class AuthController {
     @Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto,
   ): Promise<{ accessToken: string }> {
     return this.authService.signIn(authCredentialsDto);
+  }
+
+  @Patch('/updaterole/:id')
+  @UseGuards(AuthGuard())
+  async updateRole(
+    @Param('id', ParseIntPipe) userId: number,
+    @Body('role') newRole: Role,
+    @GetUser() user: User,
+  ): Promise<void> {
+    if (user.role !== Role.ADMIN) {
+      throw new ForbiddenException(
+        "You don't have permission to change user roles",
+      );
+    }
+    await this.authService.updateUserRole(userId, newRole);
+  }
+
+  @Delete('/deleteuser/:id')
+  @UseGuards(AuthGuard())
+  async deleteUser(
+    @Param('id', ParseIntPipe) userId: number,
+    @GetUser() user: User,
+  ): Promise<void> {
+    if (user.role === Role.ADMIN || user.id === userId) {
+      await this.authService.deleteUser(userId);
+    } else {
+      throw new ForbiddenException(
+        "You don't have permission to delete this user",
+      );
+    }
   }
 }
