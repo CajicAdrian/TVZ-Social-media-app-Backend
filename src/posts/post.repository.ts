@@ -42,6 +42,12 @@ export class PostRepository extends Repository<Post> {
       .leftJoinAndSelect('post.images', 'images')
       .loadRelationCountAndMap('post.likeCount', 'post.likes') // Count likes
       .loadRelationCountAndMap('post.commentCount', 'post.comments')
+      .loadRelationCountAndMap(
+        'post.likedByCurrentUser', // Flag if the current user liked this post
+        'post.likes',
+        'ourLike',
+        (qb) => qb.andWhere('ourLike.userId = :userId', { userId }),
+      )
       .where('post.userId = :userId', { userId })
       .getMany();
 
