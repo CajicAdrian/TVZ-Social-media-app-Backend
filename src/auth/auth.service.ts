@@ -33,19 +33,24 @@ export class AuthService {
 
   async signIn(
     authCredentialsDto: AuthCredentialsDto,
-  ): Promise<{ accessToken: string }> {
+  ): Promise<{ accessToken: string; user: User }> {
     const username = await this.userRepository.validateUserPassword(
       authCredentialsDto,
     );
+    console.log('Validated Username:', username); // Log username validation result
 
     if (!username) {
+      console.log('Invalid credentials provided'); // Log invalid login attempt
       throw new UnauthorizedException(`Invalid credentials`);
     }
+
+    const user = await this.userRepository.findOne({ username });
+    console.log('Retrieved User:', user); // Log retrieved user details
 
     const payload: JwtPayload = { username };
     const accessToken = await this.jwtService.sign(payload);
 
-    return { accessToken };
+    return { accessToken, user };
   }
 
   async updateUserRole(userId: number, newRole: Role): Promise<void> {

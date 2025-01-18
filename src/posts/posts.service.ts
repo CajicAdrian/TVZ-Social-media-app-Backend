@@ -35,6 +35,10 @@ export class PostsService {
     return found;
   }
 
+  async getPostsByUser(userId: number): Promise<Post[]> {
+    return this.postRepository.findByUser(userId);
+  }
+
   async getCommentIds(id: number): Promise<number[]> {
     return this.postRepository.getCommentIds(id);
   }

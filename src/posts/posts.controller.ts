@@ -37,6 +37,13 @@ export class PostsController {
     return this.postsService.getPostById(id);
   }
 
+  @Get('/user/:userId')
+  async getPostsByUser(
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<PostEntity[]> {
+    return this.postsService.getPostsByUser(userId);
+  }
+
   @Post()
   @UsePipes(ValidationPipe)
   createPost(

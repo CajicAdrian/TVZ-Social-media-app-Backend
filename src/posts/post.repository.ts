@@ -18,6 +18,7 @@ export class PostRepository extends Repository<Post> {
   async getPosts(user?: User): Promise<Post[]> {
     let query = this.createQueryBuilder('post')
       .leftJoinAndSelect('post.images', 'images')
+      .leftJoinAndSelect('post.user', 'user')
       .loadRelationCountAndMap('post.likeCount', 'post.likes')
       .loadRelationCountAndMap('post.commentCount', 'post.comments');
 
@@ -32,7 +33,20 @@ export class PostRepository extends Repository<Post> {
       );
     }
 
-    return query.getMany();
+    const posts = await query.getMany();
+    return posts;
+  }
+
+  async findByUser(userId: number): Promise<Post[]> {
+    const posts = await this.createQueryBuilder('post')
+      .leftJoinAndSelect('post.images', 'images')
+      .loadRelationCountAndMap('post.likeCount', 'post.likes') // Count likes
+      .loadRelationCountAndMap('post.commentCount', 'post.comments')
+      .where('post.userId = :userId', { userId })
+      .getMany();
+
+    console.log('Fetched Posts:', posts); // Debug the fetched posts
+    return posts;
   }
 
   async getCommentIds(id: number): Promise<number[]> {
