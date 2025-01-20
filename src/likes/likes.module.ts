@@ -7,6 +7,7 @@ import { PostsModule } from 'src/posts/posts.module';
 import { LikeRepository } from './like.repository';
 import { LikesController } from './likes.controller';
 import { LikesService } from './likes.service';
+import { NotificationsModule } from 'src/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { LikesService } from './likes.service';
     TypeOrmModule.forFeature([ImageRepository]),
     PostsModule,
     AuthModule,
+    NotificationsModule,
   ],
   controllers: [LikesController],
   providers: [LikesService],

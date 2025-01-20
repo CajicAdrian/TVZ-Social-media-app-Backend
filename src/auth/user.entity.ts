@@ -13,6 +13,7 @@ import { Image } from 'src/images/image.entity';
 import { Comment } from 'src/comments/comment.entity';
 import { Like } from 'src/likes/like.entity';
 import { Role } from './role.enum';
+import { Notification } from 'src/notifications/notifications.entity';
 
 @Entity()
 @Unique(['username'])
@@ -46,6 +47,11 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Like, (like) => like.user, { eager: false })
   likes: Like[];
+
+  @OneToMany(() => Notification, (notification) => notification.user, {
+    eager: false,
+  })
+  notifications: Notification[];
 
   async validatePassword(password: string): Promise<boolean> {
     const hash = await bcrypt.hash(password, this.salt);

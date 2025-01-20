@@ -15,6 +15,7 @@ import { LikesModule } from './likes/likes.module';
 import { ConfigModule } from '@nestjs/config';
 import { validate } from './config.schema';
 import { EnvModule } from './env/env.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { EnvModule } from './env/env.module';
     CommentsModule,
     LikesModule,
     EnvModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
