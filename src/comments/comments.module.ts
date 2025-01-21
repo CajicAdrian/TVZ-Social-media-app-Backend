@@ -7,6 +7,7 @@ import { PostsModule } from 'src/posts/posts.module';
 import { CommentRepository } from './comment.repository';
 import { CommentsController } from './comments.controller';
 import { CommentsService } from './comments.service';
+import { NotificationsModule } from 'src/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { CommentsService } from './comments.service';
     TypeOrmModule.forFeature([ImageRepository]),
     PostsModule,
     AuthModule,
+    NotificationsModule,
   ],
   controllers: [CommentsController],
   providers: [CommentsService],

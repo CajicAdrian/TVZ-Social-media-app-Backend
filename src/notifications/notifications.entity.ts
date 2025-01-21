@@ -1,5 +1,3 @@
-import { User } from 'src/auth/user.entity';
-import { Post } from 'src/posts/post.entity';
 import {
   BaseEntity,
   Column,
@@ -8,27 +6,31 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { User } from 'src/auth/user.entity';
+import { Post } from 'src/posts/post.entity';
 
 @Entity()
 export class Notification extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'enum', enum: ['like', 'comment', 'follow'] })
-  type: 'like' | 'comment' | 'follow';
+  @Column({ type: 'enum', enum: ['like', 'comment'], nullable: false })
+  type: 'like' | 'comment'; // Add 'comment' type here
 
-  @ManyToOne(() => User, (user) => user.notifications, { eager: false })
-  user: User; // Recipient of the notification
+  @ManyToOne(() => User, (user) => user.notifications, {
+    onDelete: 'CASCADE',
+  })
+  user: User;
 
-  @ManyToOne(() => User, { eager: true })
-  fromUser: User; // User who triggered the notification
+  @ManyToOne(() => User, { nullable: true })
+  fromUser: User;
 
-  @ManyToOne(() => Post, { nullable: true, eager: true })
-  post: Post; // Post related to the notification (optional)
+  @ManyToOne(() => Post, { nullable: true })
+  post: Post;
 
   @Column({ default: false })
-  read: boolean; // Indicates if the notification has been read
+  read: boolean;
 
   @CreateDateColumn()
-  createdAt: Date; // Timestamp for when the notification was created
+  createdAt: Date;
 }
