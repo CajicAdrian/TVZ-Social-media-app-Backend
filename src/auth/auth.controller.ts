@@ -28,10 +28,16 @@ export class AuthController {
     return this.authService.getAllUsers();
   }
 
+  @Get('/getallusers/exceptme')
+  @UseGuards(AuthGuard())
+  async getAllUsersExceptMe(@GetUser() user: User): Promise<User[]> {
+    return this.authService.getAllUsersExcept(user.id);
+  }
+
   @Post('/signup')
   signUp(
     @Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto,
-  ): Promise<void> {
+  ): Promise<User> {
     return this.authService.signUp(authCredentialsDto);
   }
 

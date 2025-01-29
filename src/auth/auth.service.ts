@@ -12,6 +12,8 @@ import { Role } from './role.enum';
 import { User } from './user.entity';
 import { PostRepository } from 'src/posts/post.repository';
 import { ImageRepository } from 'src/images/image.repository';
+import { Not } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -27,26 +29,37 @@ export class AuthService {
     return this.userRepository.find();
   }
 
-  async signUp(authCredentialsDto: AuthCredentialsDto): Promise<void> {
+  async getAllUsersExcept(userId: number): Promise<User[]> {
+    return this.userRepository.find({
+      where: { id: Not(userId) }, // Exclude the current user
+      select: ['id', 'username'], // Specify the fields you want
+    });
+  }
+
+  async signUp(authCredentialsDto: AuthCredentialsDto): Promise<User> {
     return this.userRepository.signUp(authCredentialsDto);
   }
 
   async signIn(
     authCredentialsDto: AuthCredentialsDto,
   ): Promise<{ accessToken: string; user: User }> {
-    const username = await this.userRepository.validateUserPassword(
-      authCredentialsDto,
-    );
-    console.log('Validated Username:', username); // Log username validation result
+    const { username, password } = authCredentialsDto;
 
-    if (!username) {
-      console.log('Invalid credentials provided'); // Log invalid login attempt
-      throw new UnauthorizedException(`Invalid credentials`);
+    // Validate user credentials
+    const user = await this.userRepository.findOne({ username });
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
     }
 
-    const user = await this.userRepository.findOne({ username });
-    console.log('Retrieved User:', user); // Log retrieved user details
+    // Verify password using salt and pepper
+    const pepperPassword = password + user.pepper;
+    const hashedPassword = await bcrypt.hash(pepperPassword, user.salt);
 
+    if (user.password !== hashedPassword) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Generate JWT token
     const payload: JwtPayload = { username };
     const accessToken = await this.jwtService.sign(payload);
 

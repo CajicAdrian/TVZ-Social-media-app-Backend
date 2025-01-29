@@ -9,13 +9,15 @@ import * as bcrypt from 'bcrypt';
 import { Role } from './role.enum';
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
-  async signUp(authCredentialsDto: AuthCredentialsDto, role: Role = Role.USER) {
+  async signUp(
+    authCredentialsDto: AuthCredentialsDto,
+    role: Role = Role.USER,
+  ): Promise<User> {
     const { username, password } = authCredentialsDto;
 
     const user = new User();
     user.username = username;
     user.salt = await bcrypt.genSalt();
-
     user.pepper = await bcrypt.genSalt();
 
     const pepperPassword = password + user.pepper;
@@ -24,6 +26,7 @@ export class UserRepository extends Repository<User> {
 
     try {
       await user.save();
+      return user;
     } catch (error) {
       if (error.code === '23505') {
         throw new ConflictException('Username already exists');
