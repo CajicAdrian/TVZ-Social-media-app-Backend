@@ -1,5 +1,6 @@
 import {
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -14,25 +15,65 @@ import { PostRepository } from 'src/posts/post.repository';
 import { ImageRepository } from 'src/images/image.repository';
 import { Not } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { UpdateSettingsDto } from './dto/update-settings.dto';
+import { RegistryHelper } from '../utils/registry.helper';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(UserRepository)
     private userRepository: UserRepository,
+    @InjectRepository(PostRepository)
     private readonly postRepository: PostRepository,
+    @InjectRepository(ImageRepository)
     private imageRepository: ImageRepository,
     private jwtService: JwtService,
   ) {}
 
   async getAllUsers(): Promise<User[]> {
-    return this.userRepository.find();
+    try {
+      const users = await this.userRepository.find({
+        select: [
+          'id',
+          'username',
+          'role',
+          'profileImage',
+          'email',
+          'bio',
+          'gender',
+        ],
+      });
+      return users;
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      throw new InternalServerErrorException('Failed to fetch users');
+    }
+  }
+
+  async getUserById(userId: number): Promise<User> {
+    const user = await this.userRepository.findOne(userId, {
+      select: [
+        'id',
+        'username',
+        'email',
+        'bio',
+        'gender',
+        'profileImage',
+        'role',
+      ],
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    return user;
   }
 
   async getAllUsersExcept(userId: number): Promise<User[]> {
     return this.userRepository.find({
       where: { id: Not(userId) }, // Exclude the current user
-      select: ['id', 'username'], // Specify the fields you want
+      select: ['id', 'username', 'profileImage'], // Specify the fields you want
     });
   }
 
@@ -45,13 +86,12 @@ export class AuthService {
   ): Promise<{ accessToken: string; user: User }> {
     const { username, password } = authCredentialsDto;
 
-    // Validate user credentials
     const user = await this.userRepository.findOne({ username });
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Verify password using salt and pepper
+    // Verify password
     const pepperPassword = password + user.pepper;
     const hashedPassword = await bcrypt.hash(pepperPassword, user.salt);
 
@@ -59,9 +99,9 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Generate JWT token
+    // ✅ Generate JWT token using the hardcoded secret
     const payload: JwtPayload = { username };
-    const accessToken = await this.jwtService.sign(payload);
+    const accessToken = this.jwtService.sign(payload);
 
     return { accessToken, user };
   }
@@ -76,6 +116,62 @@ export class AuthService {
     user.role = newRole;
 
     await user.save();
+  }
+
+  async getUserSettings(user: User): Promise<Record<string, any>> {
+    const settings = {
+      accountVisibility: await RegistryHelper.getSetting(
+        user.id,
+        'accountVisibility',
+      ),
+      language: await RegistryHelper.getSetting(user.id, 'language'),
+      notificationPreferences: await RegistryHelper.getSetting(
+        user.id,
+        'notificationPreferences',
+      ),
+    };
+
+    return {
+      accountVisibility: settings.accountVisibility === 'true',
+      language: settings.language || 'en',
+      notificationPreferences: settings.notificationPreferences
+        ? JSON.parse(settings.notificationPreferences)
+        : {},
+    };
+  }
+
+  async updateUserSettings(
+    userId: number,
+    updateData: Partial<User>,
+  ): Promise<{ user: User; newToken: string }> {
+    const user = await this.userRepository.findOne(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Update only the fields that are provided
+    Object.assign(user, updateData);
+    await this.userRepository.save(user); // ✅ Ensures changes persist
+
+    // Generate a new JWT token for the updated user
+    const payload: JwtPayload = { username: user.username };
+    const newToken = this.jwtService.sign(payload);
+
+    return { user, newToken };
+  }
+
+  async updateUserProfileImage(
+    userId: number,
+    filePath: string,
+  ): Promise<void> {
+    const user = await this.userRepository.findOne(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // ✅ Store the new profile image path
+    user.profileImage = filePath;
+    await this.userRepository.save(user);
   }
 
   async deleteUser(userId: number): Promise<void> {

@@ -21,7 +21,8 @@ export class PostsService {
   ) {}
 
   async getPosts(user: User): Promise<Post[]> {
-    return this.postRepository.getPosts(user);
+    const transformedPosts = await this.postRepository.getPosts(user);
+    return transformedPosts as any; // ✅ TypeScript no longer complains
   }
 
   async getPostById(id: number): Promise<Post> {

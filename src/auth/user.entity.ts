@@ -53,6 +53,18 @@ export class User extends BaseEntity {
   })
   notifications: Notification[];
 
+  @Column({ nullable: true })
+  bio: string;
+
+  @Column({ unique: true, nullable: true })
+  email: string;
+
+  @Column({ nullable: true })
+  gender: string;
+
+  @Column({ nullable: true })
+  profileImage: string;
+
   async validatePassword(password: string): Promise<boolean> {
     const hash = await bcrypt.hash(password, this.salt);
     return hash === this.password;

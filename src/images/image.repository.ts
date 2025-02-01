@@ -4,25 +4,19 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 
 @EntityRepository(Image)
 export class ImageRepository extends Repository<Image> {
-  async createImage(image: Express.Multer.File): Promise<Image> {
+  async createImage(
+    image: Express.Multer.File,
+    filePath: string,
+  ): Promise<Image> {
     if (!image.mimetype.startsWith('image/')) {
       throw new HttpException('Forbidden', HttpStatus.BAD_REQUEST);
     }
+
     const imageEntity = new Image();
     imageEntity.fileName = image.filename;
-    imageEntity.filePath = image.destination;
+    imageEntity.filePath = filePath; // Use the correct filePath based on type
 
     await imageEntity.save();
     return imageEntity;
-  }
-
-  async createImages(images: Express.Multer.File[]): Promise<Image[]> {
-    const imageEntities = [];
-
-    await images.forEach(async (image) => {
-      imageEntities.push(await this.createImage(image));
-    });
-
-    return imageEntities;
   }
 }
