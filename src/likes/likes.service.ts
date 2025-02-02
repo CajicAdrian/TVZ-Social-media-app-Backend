@@ -18,34 +18,51 @@ export class LikesService {
   ) {}
 
   async createLike(post: Post, user: User): Promise<Like> {
-    // Ensure the post includes the user
+    // ✅ Ensure the post includes the user (post owner)
     const postWithUser = await this.postRepository.findOne(post.id, {
-      relations: ['user'], // Ensure the user is loaded
+      relations: ['user'],
     });
 
     if (!postWithUser?.user) {
       throw new Error('Post owner (user) not found');
     }
 
-    // Create the like
+    // ✅ Check if the user already liked the post
+    const existingLike = await this.likeRepository.findOne({
+      where: { user, post },
+    });
+
+    if (existingLike) {
+      return existingLike; // ✅ Prevent duplicate likes
+    }
+
+    // ✅ Create the like
     const like = await this.likeRepository.createLike(postWithUser, user);
 
-    // Create a notification
-    try {
+    // ✅ Check if a like notification already exists for this user & post
+    const existingNotification = await this.notificationService.getLikeNotification(
+      user,
+      post,
+    );
+
+    if (!existingNotification) {
+      // ✅ Create a notification only if it doesn't exist
       await this.notificationService.createNotification(
         'like',
         postWithUser.user,
         user,
         postWithUser,
       );
-    } catch (err) {
-      console.error('Failed to create notification:', err);
-      // Optionally, log the error or handle it gracefully
     }
+
     return like;
   }
 
   async deleteLike(post: Post, user: User): Promise<void> {
-    return this.likeRepository.deleteLike(post, user);
+    // ✅ Remove the like
+    await this.likeRepository.deleteLike(post, user);
+
+    // ✅ Remove ONLY this user's like notification for this post
+    await this.notificationService.deleteLikeNotification(user, post);
   }
 }
