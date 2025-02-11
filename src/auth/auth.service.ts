@@ -118,28 +118,6 @@ export class AuthService {
     await user.save();
   }
 
-  async getUserSettings(user: User): Promise<Record<string, any>> {
-    const settings = {
-      accountVisibility: await RegistryHelper.getSetting(
-        user.id,
-        'accountVisibility',
-      ),
-      language: await RegistryHelper.getSetting(user.id, 'language'),
-      notificationPreferences: await RegistryHelper.getSetting(
-        user.id,
-        'notificationPreferences',
-      ),
-    };
-
-    return {
-      accountVisibility: settings.accountVisibility === 'true',
-      language: settings.language || 'en',
-      notificationPreferences: settings.notificationPreferences
-        ? JSON.parse(settings.notificationPreferences)
-        : {},
-    };
-  }
-
   async updateUserSettings(
     userId: number,
     updateData: Partial<User>,

@@ -6,6 +6,7 @@ import { Like } from './like.entity';
 import { LikeRepository } from './like.repository';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { PostRepository } from 'src/posts/post.repository';
+import { RegistryHelper } from '../utils/registry.helper';
 
 @Injectable()
 export class LikesService {
@@ -39,6 +40,25 @@ export class LikesService {
     // ✅ Create the like
     const like = await this.likeRepository.createLike(postWithUser, user);
 
+    // ✅ Check if like notifications are enabled for the post owner
+    const likeNotificationsEnabled = await RegistryHelper.getSetting(
+      postWithUser.user.id,
+      'likeNotifications',
+    );
+
+    console.log(
+      `🔍 Checking Like Notifications for user ${postWithUser.user.id}:`,
+      likeNotificationsEnabled,
+    );
+
+    // ❌ If notifications are disabled, do NOT send a like notification
+    if (likeNotificationsEnabled !== '1') {
+      console.log(
+        `❌ Like notifications are disabled for user ${postWithUser.user.id}. Skipping notification.`,
+      );
+      return like;
+    }
+
     // ✅ Check if a like notification already exists for this user & post
     const existingNotification = await this.notificationService.getLikeNotification(
       user,
@@ -46,7 +66,7 @@ export class LikesService {
     );
 
     if (!existingNotification) {
-      // ✅ Create a notification only if it doesn't exist
+      // ✅ Create a notification only if it doesn't exist and is enabled
       await this.notificationService.createNotification(
         'like',
         postWithUser.user,

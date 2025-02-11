@@ -12,10 +12,9 @@ import { TcpModule } from './tcp/tcp.module';
 import { UdpModule } from './udp/udp.module';
 import { CommentsModule } from './comments/comments.module';
 import { LikesModule } from './likes/likes.module';
-import { ConfigModule } from '@nestjs/config';
-import { validate } from './config.schema';
 import { NotificationsModule } from './notifications/notifications.module';
 import { MessagesModule } from './messages/messages.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -32,6 +31,7 @@ import { MessagesModule } from './messages/messages.module';
     LikesModule,
     NotificationsModule,
     MessagesModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

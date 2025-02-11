@@ -4,6 +4,7 @@ import { NotificationsRepository } from './notifications.repository';
 import { Notification } from './notifications.entity';
 import { User } from 'src/auth/user.entity';
 import { Post } from 'src/posts/post.entity';
+import { RegistryHelper } from '../utils/registry.helper';
 
 @Injectable()
 export class NotificationsService {
@@ -14,16 +15,43 @@ export class NotificationsService {
 
   async createNotification(
     type: 'like' | 'comment',
-    user: User, // ✅ This is the user receiving the notification
+    user: User, // ✅ The user receiving the notification
     fromUser: User, // ✅ The user who performed the action
     post?: Post,
-  ): Promise<Notification> {
-    return this.notificationsRepository.createNotification(
-      type,
-      user,
-      fromUser,
-      post,
-    );
+  ): Promise<Notification | null> {
+    try {
+      // ✅ Fetch user's notification preference from Windows Registry
+      const settingKey =
+        type === 'like' ? 'likeNotifications' : 'commentNotifications';
+      const isEnabled = await RegistryHelper.getSetting(user.id, settingKey);
+
+      console.log(
+        `🔍 Checking ${type} notifications for user ${user.id}:`,
+        isEnabled,
+      );
+
+      // ❌ If notifications are disabled, do NOT create a notification
+      if (isEnabled !== '1') {
+        console.log(
+          `❌ ${type} notifications are disabled for user ${user.id}. Skipping notification.`,
+        );
+        return null;
+      }
+
+      // ✅ Create the notification since it's enabled
+      return this.notificationsRepository.createNotification(
+        type,
+        user,
+        fromUser,
+        post,
+      );
+    } catch (error) {
+      console.error(
+        `❌ Failed to check notification settings for user ${user.id}:`,
+        error,
+      );
+      return null; // ❌ Prevents sending notifications if an error occurs
+    }
   }
 
   async getNotificationsForUser(user: User): Promise<Notification[]> {

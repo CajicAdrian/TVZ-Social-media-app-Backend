@@ -83,12 +83,6 @@ export class AuthController {
     await this.authService.updateUserRole(userId, newRole);
   }
 
-  @Get('settings')
-  @UseGuards(AuthGuard())
-  async getUserSettings(@GetUser() user: User): Promise<Record<string, any>> {
-    return this.authService.getUserSettings(user);
-  }
-
   @Patch('settings')
   @UseGuards(AuthGuard())
   async updateSettings(
