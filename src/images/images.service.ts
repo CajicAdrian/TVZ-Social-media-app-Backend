@@ -7,6 +7,7 @@ import { ImageRepository } from './image.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Image } from './image.entity';
 import { UserRepository } from 'src/auth/user.repository';
+import { IniHelper } from 'src/utils/ini.helper';
 
 @Injectable()
 export class ImagesService {
@@ -23,6 +24,15 @@ export class ImagesService {
     if (!image.mimetype.startsWith('image/')) {
       throw new BadRequestException(
         'Invalid file type. Please upload an image.',
+      );
+    }
+
+    const maxSize = await IniHelper.getSetting('MaxUploadSize');
+    const MaxSizeInBytes = parseInt(maxSize) * 1024; // we set in KB
+
+    if (image.size > MaxSizeInBytes) {
+      throw new BadRequestException(
+        `File is too large. Maximum allowed size is ${maxSize}MB`,
       );
     }
 

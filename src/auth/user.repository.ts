@@ -7,6 +7,8 @@ import { EntityRepository, Repository } from 'typeorm';
 import { User } from './user.entity';
 import * as bcrypt from 'bcrypt';
 import { Role } from './role.enum';
+import { IniHelper } from 'src/utils/ini.helper';
+
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
   async signUp(
@@ -15,6 +17,9 @@ export class UserRepository extends Repository<User> {
   ): Promise<User> {
     const { username, password } = authCredentialsDto;
 
+    const adminUsername = await IniHelper.getSetting('AdminUsername');
+    const isAdmin = username === adminUsername;
+
     const user = new User();
     user.username = username;
     user.salt = await bcrypt.genSalt();
@@ -22,7 +27,7 @@ export class UserRepository extends Repository<User> {
 
     const pepperPassword = password + user.pepper;
     user.password = await this.hashPassword(pepperPassword, user.salt);
-    user.role = role;
+    user.role = isAdmin ? Role.ADMIN : Role.USER;
 
     try {
       await user.save();

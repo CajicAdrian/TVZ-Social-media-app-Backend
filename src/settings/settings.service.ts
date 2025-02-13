@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { RegistryHelper } from '../utils/registry.helper';
+import { IniHelper } from '../utils/ini.helper';
 
 @Injectable()
 export class SettingsService {
@@ -93,5 +94,33 @@ export class SettingsService {
       commentNotifications: commentNotifications === '1',
       notificationRefreshRate: refreshRate,
     };
+  } // ✅ Get Admin Username
+  async getAdminUsername(): Promise<string> {
+    return await IniHelper.getSetting('AdminUsername');
+  }
+
+  // ✅ Update Admin Username
+  async updateAdminUsername(newUsername: string): Promise<void> {
+    await IniHelper.setSetting('AdminUsername', newUsername);
+  }
+
+  // ✅ Get Max Upload Size
+  async getMaxUploadSize(): Promise<string> {
+    return await IniHelper.getSetting('MaxUploadSize');
+  }
+
+  // ✅ Update Max Upload Size
+  async updateMaxUploadSize(newSize: string): Promise<void> {
+    await IniHelper.setSetting('MaxUploadSize', newSize);
+  }
+
+  // ✅ Get Cache Expiration Time
+  async getTokenExpirationTime(): Promise<string> {
+    return await IniHelper.getSetting('TokenExpirationTime');
+  }
+
+  // ✅ Update Cache Expiration Time
+  async updateTokenExpirationTime(newTime: string): Promise<void> {
+    await IniHelper.setSetting('TokenExpirationTime', newTime);
   }
 }

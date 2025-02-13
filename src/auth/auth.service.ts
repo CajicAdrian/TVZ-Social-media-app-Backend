@@ -15,8 +15,7 @@ import { PostRepository } from 'src/posts/post.repository';
 import { ImageRepository } from 'src/images/image.repository';
 import { Not } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { UpdateSettingsDto } from './dto/update-settings.dto';
-import { RegistryHelper } from '../utils/registry.helper';
+import { IniHelper } from '../utils/ini.helper';
 
 @Injectable()
 export class AuthService {
@@ -99,9 +98,16 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // ✅ Generate JWT token using the hardcoded secret
+    // ✅ Dynamically get expiration time from settings.ini
+    const expirationTime = await IniHelper.getSetting('TokenExpirationTime');
+    const expiresIn = `${expirationTime}s`; // ✅ Always enforce "s"
+
     const payload: JwtPayload = { username };
-    const accessToken = this.jwtService.sign(payload);
+    const accessToken = this.jwtService.sign(payload, { expiresIn });
+
+    console.log(
+      `🔑 Token successfully generated: ${accessToken} | Expiration: ${expiresIn}`,
+    );
 
     return { accessToken, user };
   }

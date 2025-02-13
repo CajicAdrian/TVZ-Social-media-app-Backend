@@ -102,4 +102,58 @@ export class SettingsController {
     const settings = await this.settingsService.getAllSettings(userId);
     return settings;
   }
+
+  // ✅ Get Admin Username
+  @Get('admin-username')
+  async getAdminUsername(): Promise<{ adminUsername: string }> {
+    const adminUsername = await this.settingsService.getAdminUsername();
+    return { adminUsername };
+  }
+
+  // ✅ Update Admin Username
+  @Patch('admin-username')
+  async updateAdminUsername(@Body('adminUsername') adminUsername: string) {
+    await this.settingsService.updateAdminUsername(adminUsername);
+    return { success: true };
+  }
+
+  // ✅ Get Max Upload Size
+  @Get('max-upload-size')
+  async getMaxUploadSize(): Promise<{ maxUploadSize: string }> {
+    const maxUploadSize = await this.settingsService.getMaxUploadSize();
+    return { maxUploadSize };
+  }
+
+  // ✅ Update Max Upload Size
+  @Patch('max-upload-size')
+  async updateMaxUploadSize(@Body('maxUploadSize') maxUploadSize: string) {
+    await this.settingsService.updateMaxUploadSize(maxUploadSize);
+    return { success: true };
+  }
+
+  // ✅ Get Token Expiration Time
+  @Get('token-expiration-time')
+  async getTokenExpirationTime(): Promise<{ tokenExpirationTime: string }> {
+    const tokenExpirationTime = await this.settingsService.getTokenExpirationTime();
+    return { tokenExpirationTime };
+  }
+
+  // ✅ Update Token Expiration Time
+  @Patch('token-expiration-time')
+  async updateTokenExpirationTime(
+    @Body('tokenExpirationTime') tokenExpirationTime: string,
+  ) {
+    await this.settingsService.updateTokenExpirationTime(tokenExpirationTime);
+    return { success: true };
+  }
+
+  // ✅ Get All Admin Settings (INI File)
+  @Get('ini')
+  async getIniSettings() {
+    return {
+      adminUsername: await this.settingsService.getAdminUsername(),
+      maxUploadSize: await this.settingsService.getMaxUploadSize(),
+      tokenExpirationTime: await this.settingsService.getTokenExpirationTime(), // ✅ Fixed
+    };
+  }
 }

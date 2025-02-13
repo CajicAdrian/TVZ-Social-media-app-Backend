@@ -14,7 +14,6 @@ import { ImageRepository } from 'src/images/image.repository';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: 'lord1234', // ✅ Define JWT_SECRET here instead of `.env`
-      signOptions: { expiresIn: 3600 },
     }),
     TypeOrmModule.forFeature([UserRepository, PostRepository, ImageRepository]),
   ],
