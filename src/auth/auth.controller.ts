@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -80,6 +81,12 @@ export class AuthController {
         "You don't have permission to change user roles",
       );
     }
+    const roleEnumValue = newRole.toUpperCase() as Role;
+
+    if (!Object.values(Role).includes(roleEnumValue)) {
+      throw new BadRequestException(`Invalid role value: ${newRole}`);
+    }
+
     await this.authService.updateUserRole(userId, newRole);
   }
 
@@ -108,6 +115,7 @@ export class AuthController {
     if (user.role === Role.ADMIN || user.id === userId) {
       await this.authService.deleteUser(userId);
     } else {
+      console.error(`❌ Permission Denied - User Role: ${user.role}`);
       throw new ForbiddenException(
         "You don't have permission to delete this user",
       );

@@ -1,5 +1,17 @@
-import { Controller, Get, Patch, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Param,
+  Body,
+  UseGuards,
+  ForbiddenException,
+} from '@nestjs/common';
 import { SettingsService } from './settings.service';
+import { AuthGuard } from '@nestjs/passport';
+import { GetUser } from 'src/auth/get-user.decorator';
+import { User } from 'src/auth/user.entity';
+import { Role } from 'src/auth/role.enum';
 
 @Controller('settings')
 export class SettingsController {
@@ -112,7 +124,17 @@ export class SettingsController {
 
   // ✅ Update Admin Username
   @Patch('admin-username')
-  async updateAdminUsername(@Body('adminUsername') adminUsername: string) {
+  @UseGuards(AuthGuard())
+  async updateAdminUsername(
+    @GetUser() user: User,
+    @Body('adminUsername') adminUsername: string,
+  ) {
+    if (user.role !== Role.ADMIN) {
+      // ✅ Only allow admins
+      throw new ForbiddenException(
+        "You don't have permission to change this setting",
+      );
+    }
     await this.settingsService.updateAdminUsername(adminUsername);
     return { success: true };
   }
@@ -126,7 +148,17 @@ export class SettingsController {
 
   // ✅ Update Max Upload Size
   @Patch('max-upload-size')
-  async updateMaxUploadSize(@Body('maxUploadSize') maxUploadSize: string) {
+  @UseGuards(AuthGuard())
+  async updateMaxUploadSize(
+    @GetUser() user: User,
+    @Body('maxUploadSize') maxUploadSize: string,
+  ) {
+    if (user.role !== Role.ADMIN) {
+      // ✅ Only allow admins
+      throw new ForbiddenException(
+        "You don't have permission to change this setting",
+      );
+    }
     await this.settingsService.updateMaxUploadSize(maxUploadSize);
     return { success: true };
   }
@@ -140,9 +172,18 @@ export class SettingsController {
 
   // ✅ Update Token Expiration Time
   @Patch('token-expiration-time')
+  @UseGuards(AuthGuard())
   async updateTokenExpirationTime(
+    @GetUser() user: User,
     @Body('tokenExpirationTime') tokenExpirationTime: string,
   ) {
+    if (user.role !== Role.ADMIN) {
+      // ✅ Only allow admins
+      throw new ForbiddenException(
+        "You don't have permission to change this setting",
+      );
+    }
+
     await this.settingsService.updateTokenExpirationTime(tokenExpirationTime);
     return { success: true };
   }

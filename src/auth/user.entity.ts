@@ -36,20 +36,42 @@ export class User extends BaseEntity {
   @Column({ default: Role.USER })
   role: string;
 
-  @OneToOne(() => Image, (image) => image.users)
+  // ✅ Ensuring Image is deleted when User is deleted
+  @OneToOne(() => Image, (image) => image.users, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   images: Image;
 
-  @OneToMany(() => Post, (post) => post.user, { eager: true, cascade: true })
+  // ✅ Delete all Posts when User is deleted
+  @OneToMany(() => Post, (post) => post.user, {
+    eager: true,
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   posts: Post[];
 
-  @OneToMany(() => Comment, (comment) => comment.user, { eager: false })
+  // ✅ Delete all Comments when User is deleted
+  @OneToMany(() => Comment, (comment) => comment.user, {
+    eager: false,
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   comments: Comment[];
 
-  @OneToMany(() => Like, (like) => like.user, { eager: false })
+  // ✅ Delete all Likes when User is deleted
+  @OneToMany(() => Like, (like) => like.user, {
+    eager: false,
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   likes: Like[];
 
+  // ✅ Delete all Notifications when User is deleted
   @OneToMany(() => Notification, (notification) => notification.user, {
     eager: false,
+    cascade: true,
+    onDelete: 'CASCADE',
   })
   notifications: Notification[];
 
