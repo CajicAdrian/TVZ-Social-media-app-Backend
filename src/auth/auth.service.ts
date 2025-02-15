@@ -219,4 +219,36 @@ export class AuthService {
     console.log(`✅ Successfully deleting user: ${user.username}`);
     await this.userRepository.remove(user);
   }
+
+  async changePassword(
+    userId: number,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
+    const user = await this.userRepository.findOne(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Validate current password
+    const hashedCurrentPassword = await bcrypt.hash(
+      currentPassword + user.pepper,
+      user.salt,
+    );
+    if (hashedCurrentPassword !== user.password) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    // Generate new salt and hash new password
+    const salt = await bcrypt.genSalt();
+    const pepperedNewPassword = newPassword + user.pepper;
+    const hashedNewPassword = await bcrypt.hash(pepperedNewPassword, salt);
+
+    // Update user password
+    user.password = hashedNewPassword;
+    user.salt = salt;
+
+    await user.save();
+  }
 }

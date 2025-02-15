@@ -121,4 +121,19 @@ export class AuthController {
       );
     }
   }
+
+  @Patch('/change-password')
+  @UseGuards(AuthGuard())
+  async changePassword(
+    @GetUser() user: User,
+    @Body('currentPassword') currentPassword: string,
+    @Body('newPassword') newPassword: string,
+  ): Promise<{ success: boolean }> {
+    await this.authService.changePassword(
+      user.id,
+      currentPassword,
+      newPassword,
+    );
+    return { success: true };
+  }
 }
