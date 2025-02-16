@@ -25,7 +25,10 @@ export class Notification extends BaseEntity {
   @ManyToOne(() => User, { nullable: true })
   fromUser: User;
 
-  @ManyToOne(() => Post, { nullable: true })
+  @ManyToOne(() => Post, (post) => post.notifications, {
+    onDelete: 'CASCADE', // ✅ Ensures notifications are deleted when the post is deleted
+    nullable: true, // ✅ Prevents blocking deletion
+  })
   post: Post;
 
   @Column({ default: false })

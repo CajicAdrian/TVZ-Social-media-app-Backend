@@ -2,6 +2,8 @@ import { User } from 'src/auth/user.entity';
 import { Comment } from 'src/comments/comment.entity';
 import { Image } from 'src/images/image.entity';
 import { Like } from 'src/likes/like.entity';
+import { Notification } from 'src/notifications/notifications.entity';
+
 import {
   BaseEntity,
   Column,
@@ -40,4 +42,10 @@ export class Post extends BaseEntity {
 
   @OneToMany(() => Image, (image) => image.posts, { cascade: true })
   images: Image[];
+
+  @OneToMany(() => Notification, (notification) => notification.post, {
+    cascade: true, // ✅ Ensures notifications are deleted with the post
+    onDelete: 'CASCADE', // ✅ Deletes all notifications when the post is deleted
+  })
+  notifications: Notification[];
 }

@@ -57,6 +57,10 @@ export class PostsService {
     const post = await this.getPostById(id);
 
     await this.postRepository.manager.query(
+      'DELETE FROM "notification" WHERE "postId" = $1',
+      [id],
+    );
+    await this.postRepository.manager.query(
       'DELETE FROM "comment" WHERE "postId" = $1',
       [id],
     );
@@ -67,6 +71,7 @@ export class PostsService {
     await Promise.all(
       post.images.map((img) => this.imageRepository.delete(img.imageId)),
     );
+
     await this.postRepository.delete(id);
   }
 }
