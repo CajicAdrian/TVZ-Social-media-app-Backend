@@ -5,10 +5,12 @@ import { Notification } from './notifications.entity';
 import { User } from 'src/auth/user.entity';
 import { Post } from 'src/posts/post.entity';
 import { RegistryHelper } from '../utils/registry.helper';
+import { Connection } from 'typeorm';
 
 @Injectable()
 export class NotificationsService {
   constructor(
+    private readonly connection: Connection, // ✅ Inject database connection
     @InjectRepository(NotificationsRepository)
     private notificationsRepository: NotificationsRepository,
   ) {}
@@ -19,6 +21,11 @@ export class NotificationsService {
     fromUser: User, // ✅ The user who performed the action
     post?: Post,
   ): Promise<Notification | null> {
+    const queryRunner = this.connection.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction(); // ✅ Start transaction
+
     try {
       // ✅ Fetch user's notification preference from Windows Registry
       const settingKey =
@@ -35,25 +42,47 @@ export class NotificationsService {
         console.log(
           `❌ ${type} notifications are disabled for user ${user.id}. Skipping notification.`,
         );
+        await queryRunner.rollbackTransaction();
         return null;
       }
 
-      // ✅ Create the notification since it's enabled
-      return this.notificationsRepository.createNotification(
+      // ✅ Check if a notification already exists to prevent duplicates
+      const existingNotification = await queryRunner.manager.findOne(
+        Notification,
+        {
+          where: { type, user, fromUser, post },
+          lock: { mode: 'pessimistic_write' }, // ✅ Critical Section (Row Lock)
+        },
+      );
+
+      if (existingNotification) {
+        console.log(`⚠️ Duplicate ${type} notification skipped.`);
+        await queryRunner.rollbackTransaction();
+        return null;
+      }
+
+      // ✅ Create the notification inside the transaction
+      const notification = queryRunner.manager.create(Notification, {
         type,
         user,
         fromUser,
         post,
-      );
+        read: false,
+      });
+
+      await queryRunner.manager.save(notification);
+      await queryRunner.commitTransaction(); // ✅ Commit if successful
+      console.log(`✅ Notification created for ${user.username}.`);
+
+      return notification;
     } catch (error) {
-      console.error(
-        `❌ Failed to check notification settings for user ${user.id}:`,
-        error,
-      );
-      return null; // ❌ Prevents sending notifications if an error occurs
+      await queryRunner.rollbackTransaction(); // ❌ Rollback on error
+      console.error(`❌ Failed to create notification:`, error);
+      return null;
+    } finally {
+      await queryRunner.release(); // ✅ Release the transaction
     }
   }
-
   async getNotificationsForUser(user: User): Promise<Notification[]> {
     return this.notificationsRepository.find({
       where: { user },
