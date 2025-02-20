@@ -13,6 +13,7 @@ import { LikesModule } from './likes/likes.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { MessagesModule } from './messages/messages.module';
 import { SettingsModule } from './settings/settings.module';
+import { QuotesModule } from './quotes/quotes.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { SettingsModule } from './settings/settings.module';
     NotificationsModule,
     MessagesModule,
     SettingsModule,
+    QuotesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
