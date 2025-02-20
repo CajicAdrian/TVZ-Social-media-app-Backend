@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/auth/user.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -6,6 +10,7 @@ import { Post } from '../posts/post.entity';
 import { CommentRepository } from './comment.repository';
 import { Comment } from './comment.entity';
 import { NotificationsService } from 'src/notifications/notifications.service';
+import { UpdateCommentDto } from './dto/update-comment.dto';
 
 @Injectable()
 export class CommentsService {
@@ -39,5 +44,86 @@ export class CommentsService {
 
   async getComments(postId: number): Promise<Comment[]> {
     return this.commentRepository.getComments(postId);
+  }
+
+  async updateComment(
+    postId: number,
+    commentId: number,
+    updateCommentDto: UpdateCommentDto,
+    user: User,
+  ): Promise<Comment> {
+    console.log(
+      `🔍 Looking for CommentID: ${commentId} under PostID: ${postId}`,
+    );
+
+    const comment = await this.commentRepository.findOne({
+      where: { id: commentId },
+      relations: ['post', 'user'],
+    });
+
+    if (!comment) {
+      console.log(`❌ Comment ID ${commentId} not found!`);
+      throw new NotFoundException(`Comment with ID ${commentId} not found`);
+    }
+
+    if (comment.post.id !== postId) {
+      console.log(`❌ Comment ${commentId} does NOT belong to Post ${postId}`);
+      throw new NotFoundException(
+        `Comment ${commentId} does not belong to post ${postId}`,
+      );
+    }
+
+    if (comment.user.id !== user.id) {
+      console.log(`❌ User ${user.id} is not authorized to edit this comment`);
+      throw new ForbiddenException('You can only edit your own comments');
+    }
+
+    console.log(`✅ Found comment, updating content...`);
+    comment.content = updateCommentDto.content;
+    comment.updatedAt = new Date();
+    await this.commentRepository.save(comment);
+
+    console.log(`✅ Successfully updated comment ID: ${commentId}`);
+    return comment;
+  }
+
+  async deleteComment(
+    postId: number,
+    commentId: number,
+    user: User,
+  ): Promise<{ message: string }> {
+    console.log(
+      `🗑️ Attempting to delete CommentID: ${commentId} under PostID: ${postId}`,
+    );
+
+    const comment = await this.commentRepository.findOne({
+      where: { id: commentId },
+      relations: ['post', 'user'],
+    });
+
+    if (!comment) {
+      console.log(`❌ Comment ID ${commentId} not found!`);
+      throw new NotFoundException(`Comment with ID ${commentId} not found`);
+    }
+
+    if (comment.post.id !== postId) {
+      console.log(`❌ Comment ${commentId} does NOT belong to Post ${postId}`);
+      throw new NotFoundException(
+        `Comment ${commentId} does not belong to post ${postId}`,
+      );
+    }
+
+    if (comment.user.id !== user.id) {
+      console.log(
+        `❌ User ${user.id} is not authorized to delete this comment`,
+      );
+      throw new ForbiddenException('You can only delete your own comments');
+    }
+
+    console.log(`✅ Comment found, deleting...`);
+    await this.commentRepository.remove(comment);
+
+    console.log(`✅ Successfully deleted comment ID: ${commentId}`);
+    return { message: 'Comment deleted successfully' };
   }
 }

@@ -3,10 +3,11 @@ import { Post } from 'src/posts/post.entity';
 import {
   BaseEntity,
   Column,
+  CreateDateColumn,
   Entity,
-  JoinTable,
   ManyToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
@@ -17,10 +18,15 @@ export class Comment extends BaseEntity {
   @Column()
   content: string;
 
-  @JoinTable()
-  @ManyToOne(() => User, (user) => user.comments, { eager: false })
+  @ManyToOne(() => User, (user) => user.comments, { eager: false }) // ✅ Ensure relation
   user: User;
 
   @ManyToOne(() => Post, (post) => post.comments, { eager: false })
   post: Post;
+
+  @CreateDateColumn()
+  createdAt: Date; // ✅ Store comment timestamp
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

@@ -17,14 +17,20 @@ export class CommentRepository extends Repository<Comment> {
       [postId],
     );
     const ids = commentInfo.map((info) => info.id);
+
     const query = this.createQueryBuilder('comment')
-      .leftJoinAndSelect('comment.user', 'user')
+      .leftJoinAndSelect('comment.user', 'user') // ✅ Ensure user details are included
       .whereInIds(ids);
+
     const comments = await query.getMany();
 
     return comments.map((comment) => ({
-      ...comment,
-      user: comment.user?.username,
+      id: comment.id,
+      content: comment.content,
+      createdAt: comment.createdAt, // ✅ Return timestamp
+      user: comment.user
+        ? { id: comment.user.id, name: comment.user.username }
+        : null, // ✅ Return user details
     }));
   }
 

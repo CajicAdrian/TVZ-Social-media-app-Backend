@@ -8,12 +8,16 @@ import { CommentRepository } from './comment.repository';
 import { CommentsController } from './comments.controller';
 import { CommentsService } from './comments.service';
 import { NotificationsModule } from 'src/notifications/notifications.module';
+import { PassportModule } from '@nestjs/passport';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([CommentRepository]),
-    TypeOrmModule.forFeature([PostRepository]),
-    TypeOrmModule.forFeature([ImageRepository]),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    TypeOrmModule.forFeature([
+      CommentRepository,
+      PostRepository,
+      ImageRepository,
+    ]),
     PostsModule,
     AuthModule,
     NotificationsModule,

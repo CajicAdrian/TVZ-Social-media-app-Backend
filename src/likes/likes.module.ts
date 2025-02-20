@@ -8,12 +8,12 @@ import { LikeRepository } from './like.repository';
 import { LikesController } from './likes.controller';
 import { LikesService } from './likes.service';
 import { NotificationsModule } from 'src/notifications/notifications.module';
+import { PassportModule } from '@nestjs/passport';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([LikeRepository]),
-    TypeOrmModule.forFeature([PostRepository]),
-    TypeOrmModule.forFeature([ImageRepository]),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    TypeOrmModule.forFeature([LikeRepository, PostRepository, ImageRepository]),
     PostsModule,
     AuthModule,
     NotificationsModule,

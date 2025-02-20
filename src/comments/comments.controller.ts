@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   UseGuards,
   UsePipes,
@@ -16,6 +18,7 @@ import { PostsService } from 'src/posts/posts.service';
 import { Comment } from './comment.entity';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { UpdateCommentDto } from './dto/update-comment.dto';
 
 @Controller('/posts/:postId/comments')
 @UseGuards(AuthGuard())
@@ -43,5 +46,36 @@ export class CommentsController {
     const comments = await this.commentsService.getComments(postId);
 
     return comments;
+  }
+
+  @Patch('/:commentId')
+  @UsePipes(ValidationPipe)
+  async updateComment(
+    @Param('postId', ParseIntPipe) postId: number,
+    @Param('commentId', ParseIntPipe) commentId: number,
+    @Body() updateCommentDto: UpdateCommentDto,
+    @GetUser() user: User,
+  ): Promise<Comment> {
+    console.log(
+      `📢 Updating Comment - PostID: ${postId}, CommentID: ${commentId}`,
+    );
+    return this.commentsService.updateComment(
+      postId,
+      commentId,
+      updateCommentDto,
+      user,
+    );
+  }
+
+  @Delete('/:commentId')
+  async deleteComment(
+    @Param('postId', ParseIntPipe) postId: number,
+    @Param('commentId', ParseIntPipe) commentId: number,
+    @GetUser() user: User,
+  ): Promise<{ message: string }> {
+    console.log(
+      `🗑️ Deleting Comment - PostID: ${postId}, CommentID: ${commentId}`,
+    );
+    return this.commentsService.deleteComment(postId, commentId, user);
   }
 }
