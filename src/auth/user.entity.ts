@@ -7,7 +7,7 @@ import {
   Unique,
   OneToOne,
 } from 'typeorm';
-import * as bcrypt from 'bcrypt';
+import { createHash } from 'crypto';
 import { Post } from 'src/posts/post.entity';
 import { Image } from 'src/images/image.entity';
 import { Comment } from 'src/comments/comment.entity';
@@ -24,8 +24,8 @@ export class User extends BaseEntity {
   @Column()
   username: string;
 
-  @Column()
-  password: string;
+  @Column('text', { array: true, default: {} })
+  passwords: string[];
 
   @Column()
   salt: string;
@@ -88,7 +88,33 @@ export class User extends BaseEntity {
   profileImage: string;
 
   async validatePassword(password: string): Promise<boolean> {
-    const hash = await bcrypt.hash(password, this.salt);
-    return hash === this.password;
+    if (!this.passwords || this.passwords.length === 0) {
+      return false; // No password history available
+    }
+
+    // 🔍 Generate dynamic salt (same rule as sign-up)
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const dynamicSalt = createHash('sha256')
+      .update(this.username + timestamp)
+      .digest('hex');
+
+    // 🔍 Retrieve list of possible peppers from .env
+    const possiblePeppers = process.env.PEPPER_VALUES?.split(',') || [];
+    if (!possiblePeppers.length) {
+      throw new Error('Server misconfiguration: No valid pepper found');
+    }
+
+    // 🔐 Try all possible peppers to match one of the stored passwords
+    for (const pepper of possiblePeppers) {
+      const hashedInputPassword = createHash('sha256')
+        .update(password + pepper + dynamicSalt)
+        .digest('hex');
+
+      if (this.passwords.includes(hashedInputPassword)) {
+        return true; // ✅ Password is correct
+      }
+    }
+
+    return false; // ❌ No match found
   }
 }

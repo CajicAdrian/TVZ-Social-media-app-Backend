@@ -1,6 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as cors from 'cors';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+dotenv.config({ path: path.resolve(__dirname, '../.env.dev') });
+console.log('✅ Loaded PEPPER_SECRET:', process.env.PEPPER_SECRET); // Debugging output
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

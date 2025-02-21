@@ -14,11 +14,11 @@ import { User } from './user.entity';
 import { PostRepository } from 'src/posts/post.repository';
 import { ImageRepository } from 'src/images/image.repository';
 import { Not } from 'typeorm';
-import * as bcrypt from 'bcrypt';
 import { IniHelper } from '../utils/ini.helper';
 import { LikeRepository } from 'src/likes/like.repository';
 import { CommentRepository } from 'src/comments/comment.repository';
 import { NotificationsRepository } from 'src/notifications/notifications.repository';
+import { createHash } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -92,27 +92,15 @@ export class AuthService {
   async signIn(
     authCredentialsDto: AuthCredentialsDto,
   ): Promise<{ accessToken: string; user: User }> {
-    const { username, password } = authCredentialsDto;
+    const user = await this.userRepository.signIn(authCredentialsDto); // ✅ Call signIn from repository
 
-    const user = await this.userRepository.findOne({ username });
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    // Verify password
-    const pepperPassword = password + user.pepper;
-    const hashedPassword = await bcrypt.hash(pepperPassword, user.salt);
-
-    if (user.password !== hashedPassword) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    // ✅ Dynamically get expiration time from settings.ini
     const expirationTime = await IniHelper.getSetting('TokenExpirationTime');
-    const expiresIn = `${expirationTime}s`; // ✅ Always enforce "s"
-    const userRole = user.role as Role;
+    const expiresIn = `${expirationTime}s`;
 
-    const payload: JwtPayload = { username: user.username, role: userRole };
+    const payload: JwtPayload = {
+      username: user.username,
+      role: user.role as Role,
+    };
     const accessToken = this.jwtService.sign(payload, { expiresIn });
 
     console.log(
@@ -231,23 +219,47 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    // Validate current password
-    const hashedCurrentPassword = await bcrypt.hash(
-      currentPassword + user.pepper,
-      user.salt,
-    );
-    if (hashedCurrentPassword !== user.password) {
+    // ✅ Use stored salt instead of regenerating it
+    const dynamicSalt = user.salt;
+
+    // 🔍 Retrieve list of possible peppers from .env
+    const possiblePeppers = process.env.PEPPER_VALUES?.split(',') || [];
+    if (!possiblePeppers.length) {
+      throw new UnauthorizedException(
+        'Server misconfiguration: No valid pepper found',
+      );
+    }
+
+    // 🔐 Validate current password against stored password history
+    let isValid = false;
+    for (const pepper of possiblePeppers) {
+      const hashedCurrentPassword = createHash('sha256')
+        .update(currentPassword + pepper + dynamicSalt)
+        .digest('hex');
+
+      if (user.passwords.includes(hashedCurrentPassword)) {
+        isValid = true;
+        break;
+      }
+    }
+
+    if (!isValid) {
       throw new UnauthorizedException('Current password is incorrect');
     }
 
-    // Generate new salt and hash new password
-    const salt = await bcrypt.genSalt();
-    const pepperedNewPassword = newPassword + user.pepper;
-    const hashedNewPassword = await bcrypt.hash(pepperedNewPassword, salt);
+    // 🔐 Generate new hashed password with latest pepper
+    const latestPepper = possiblePeppers[possiblePeppers.length - 1]; // ✅ Use latest pepper
+    const newHashedPassword = createHash('sha256')
+      .update(newPassword + latestPepper + dynamicSalt) // ✅ Use same hashing as sign-up
+      .digest('hex');
 
-    // Update user password
-    user.password = hashedNewPassword;
-    user.salt = salt;
+    // ✅ Save new hashed password to history
+    user.passwords.push(newHashedPassword);
+
+    // ✅ Limit stored password history (optional security measure)
+    if (user.passwords.length > 5) {
+      user.passwords.shift(); // Remove the oldest password
+    }
 
     await user.save();
   }
