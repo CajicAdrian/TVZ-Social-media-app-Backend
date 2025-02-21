@@ -16,7 +16,7 @@ import { NotificationsRepository } from 'src/notifications/notifications.reposit
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
-      secret: 'lord1234', // ✅ Define JWT_SECRET here instead of `.env`
+      secret: 'lord1234',
     }),
     TypeOrmModule.forFeature([
       UserRepository,

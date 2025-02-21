@@ -17,13 +17,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     @InjectRepository(UserRepository)
     private userRepository: UserRepository,
-
-    @Inject(forwardRef(() => AuthService)) // ✅ Inject AuthService to access JWT Secret
-    private authService: AuthService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: 'lord1234', // ✅ Get secret from AuthModule
+      secretOrKey: 'lord1234',
     });
   }
 
