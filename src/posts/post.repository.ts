@@ -92,6 +92,7 @@ export class PostRepository extends Repository<Post> {
         'ourLike',
         (qb) => qb.andWhere('ourLike.userId = :userId', { userId }),
       )
+      .orderBy('post.createdAt', 'DESC') // ✅ Sort by newest first
       .getMany();
 
     return posts.map((post) => ({

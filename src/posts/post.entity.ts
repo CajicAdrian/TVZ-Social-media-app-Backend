@@ -8,6 +8,7 @@ import { Notification } from 'src/notifications/notifications.entity';
 import {
   BaseEntity,
   Column,
+  CreateDateColumn,
   Entity,
   JoinTable,
   ManyToOne,
@@ -26,14 +27,15 @@ export class Post extends BaseEntity {
   @Column()
   description: string;
 
-  @JoinTable()
+  @CreateDateColumn() // ✅ Automatically stores post creation date
+  createdAt: Date;
+
   @ManyToOne(() => User, (user) => user.posts, {
     eager: false,
     onDelete: 'CASCADE',
   })
   user: User;
 
-  @JoinTable()
   @OneToMany(() => Comment, (comment) => comment.post, { cascade: true })
   comments: Comment[];
 
@@ -42,7 +44,6 @@ export class Post extends BaseEntity {
     return this.comments?.length || 0;
   }
 
-  @JoinTable()
   @OneToMany(() => Like, (like) => like.post, { cascade: true })
   likes: Like[];
 
