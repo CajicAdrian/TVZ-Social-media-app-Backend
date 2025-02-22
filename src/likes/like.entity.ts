@@ -1,5 +1,6 @@
 import { User } from 'src/auth/user.entity';
 import { Post } from 'src/posts/post.entity';
+import { Comment } from 'src/comments/comment.entity';
 import {
   BaseEntity,
   Entity,
@@ -19,4 +20,10 @@ export class Like extends BaseEntity {
 
   @ManyToOne(() => Post, (post) => post.likes, { eager: false })
   post: Post;
+
+  @ManyToOne(() => Comment, (comment) => comment.likes, {
+    eager: false,
+    nullable: true,
+  }) // ✅ Allow likes for comments
+  comment: Comment;
 }

@@ -9,14 +9,23 @@ import { LikesController } from './likes.controller';
 import { LikesService } from './likes.service';
 import { NotificationsModule } from 'src/notifications/notifications.module';
 import { PassportModule } from '@nestjs/passport';
+import { CommentsModule } from 'src/comments/comments.module';
+import { CommentRepository } from 'src/comments/comment.repository';
+import { forwardRef } from '@nestjs/common';
 
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    TypeOrmModule.forFeature([LikeRepository, PostRepository, ImageRepository]),
+    TypeOrmModule.forFeature([
+      LikeRepository,
+      PostRepository,
+      ImageRepository,
+      CommentRepository,
+    ]),
     PostsModule,
     AuthModule,
-    NotificationsModule,
+    forwardRef(() => NotificationsModule), // ✅ Fix circular dependency
+    forwardRef(() => CommentsModule),
   ],
   controllers: [LikesController],
   providers: [LikesService],

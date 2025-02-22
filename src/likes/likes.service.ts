@@ -2,10 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/auth/user.entity';
 import { Post } from '../posts/post.entity';
+import { Comment } from '../comments/comment.entity';
 import { Like } from './like.entity';
 import { LikeRepository } from './like.repository';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { PostRepository } from 'src/posts/post.repository';
+import { CommentRepository } from 'src/comments/comment.repository';
 import { RegistryHelper } from '../utils/registry.helper';
 
 @Injectable()
@@ -16,73 +18,80 @@ export class LikesService {
     private likeRepository: LikeRepository,
     @InjectRepository(PostRepository)
     private postRepository: PostRepository,
+    @InjectRepository(CommentRepository)
+    private commentRepository: CommentRepository,
   ) {}
 
-  async createLike(post: Post, user: User): Promise<Like> {
-    // ✅ Ensure the post includes the user (post owner)
-    const postWithUser = await this.postRepository.findOne(post.id, {
-      relations: ['user'],
-    });
+  async createLike(
+    targetId: number,
+    user: User,
+    type: 'post' | 'comment',
+  ): Promise<Like> {
+    let target: Post | Comment | null = null;
 
-    if (!postWithUser?.user) {
-      throw new Error('Post owner (user) not found');
+    if (type === 'post') {
+      target = await this.postRepository.findOne(targetId, {
+        relations: ['user'],
+      });
+    } else {
+      target = await this.commentRepository.findOne(targetId, {
+        relations: ['user'],
+      });
     }
 
-    // ✅ Check if the user already liked the post
+    if (!target) {
+      throw new Error(`${type} not found`);
+    }
+
+    // ✅ Fix: Ensure correct relation when checking existing likes
     const existingLike = await this.likeRepository.findOne({
-      where: { user, post },
+      where: { user, [type]: target },
     });
 
     if (existingLike) {
-      return existingLike; // ✅ Prevent duplicate likes
+      return existingLike; // Prevent duplicate likes
     }
 
-    // ✅ Create the like
-    const like = await this.likeRepository.createLike(postWithUser, user);
+    // ✅ Fix: Pass `type` to `createLike`
+    const like = await this.likeRepository.createLike(target, user, type);
 
-    // ✅ Check if like notifications are enabled for the post owner
+    // ✅ Fetch notification setting
     const likeNotificationsEnabled = await RegistryHelper.getSetting(
-      postWithUser.user.id,
+      target.user.id,
       'likeNotifications',
     );
 
-    console.log(
-      `🔍 Checking Like Notifications for user ${postWithUser.user.id}:`,
-      likeNotificationsEnabled,
-    );
-
-    // ❌ If notifications are disabled, do NOT send a like notification
-    if (likeNotificationsEnabled !== '1') {
-      console.log(
-        `❌ Like notifications are disabled for user ${postWithUser.user.id}. Skipping notification.`,
-      );
-      return like;
-    }
-
-    // ✅ Check if a like notification already exists for this user & post
-    const existingNotification = await this.notificationService.getLikeNotification(
-      user,
-      post,
-    );
-
-    if (!existingNotification) {
-      // ✅ Create a notification only if it doesn't exist and is enabled
-      await this.notificationService.createNotification(
-        'like',
-        postWithUser.user,
-        user,
-        postWithUser,
-      );
+    // ✅ Fix: Ensure `post` or `comment` is passed separately
+    if (likeNotificationsEnabled === '1') {
+      if (type === 'post') {
+        await this.notificationService.createNotification(
+          'like',
+          target.user,
+          user,
+          target as Post,
+          undefined, // No comment
+        );
+      } else {
+        await this.notificationService.createNotification(
+          'like_comment', // New type for comment likes
+          target.user,
+          user,
+          undefined, // No post
+          target as Comment,
+        );
+      }
     }
 
     return like;
   }
 
-  async deleteLike(post: Post, user: User): Promise<void> {
-    // ✅ Remove the like
-    await this.likeRepository.deleteLike(post, user);
+  async deleteLike(
+    target: Post | Comment,
+    user: User,
+    type: 'post' | 'comment',
+  ): Promise<void> {
+    await this.likeRepository.deleteLike(target, user);
 
-    // ✅ Remove ONLY this user's like notification for this post
-    await this.notificationService.deleteLikeNotification(user, post);
+    await this.notificationService.deleteLikeNotification(user, target, type);
   }
 }

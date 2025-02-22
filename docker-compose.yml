@@ -1,4 +1,3 @@
-version: '3'
 services:
   tasks-database:
     container_name: social-media-db

@@ -87,6 +87,10 @@ export class User extends BaseEntity {
   @Column({ nullable: true })
   profileImage: string;
 
+  canDeleteComment(commentOwnerId: number): boolean {
+    return this.isAdmin() || this.id === commentOwnerId;
+  }
+
   async validatePassword(password: string): Promise<boolean> {
     if (!this.passwords || this.passwords.length === 0) {
       return false; // No password history available
@@ -116,5 +120,10 @@ export class User extends BaseEntity {
     }
 
     return false; // ❌ No match found
+  }
+
+  // ✅ Instance Method: Check if the user is an admin
+  isAdmin(): boolean {
+    return this.role === Role.ADMIN;
   }
 }

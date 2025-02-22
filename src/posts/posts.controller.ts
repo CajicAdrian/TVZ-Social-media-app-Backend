@@ -60,14 +60,13 @@ export class PostsController {
     @GetUser() user: User,
   ): Promise<void> {
     const post = await this.getPostById(id);
-    if (
-      user.role === Role.ADMIN ||
-      (post.user.id === user.id && user.role === Role.USER)
-    ) {
-      return this.postsService.updatePostById(id, changes);
-    } else {
-      throw new ForbiddenException("Cannot edit other user's posts");
+
+    // ✅ Use `canUserEdit()` instead of manual role checking
+    if (!post.canUserEdit(user)) {
+      throw new ForbiddenException("You can't edit this post.");
     }
+
+    return this.postsService.updatePostById(id, changes, user);
   }
 
   @Delete('/:id')
@@ -77,13 +76,11 @@ export class PostsController {
   ): Promise<void> {
     const post = await this.getPostById(id);
 
-    if (
-      user.role === Role.ADMIN ||
-      (post.user.id === user.id && user.role === Role.USER)
-    ) {
-      return this.postsService.deletePostById(id);
-    } else {
-      throw new ForbiddenException("Cannot delete other user's posts");
+    // ✅ Use `canUserDelete()` instead of manual role checking
+    if (!post.canUserDelete(user)) {
+      throw new ForbiddenException("You can't delete this post.");
     }
+
+    return this.postsService.deletePostById(id, user);
   }
 }

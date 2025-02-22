@@ -11,35 +11,54 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from 'src/auth/get-user.decorator';
 import { User } from 'src/auth/user.entity';
-import { PostsService } from 'src/posts/posts.service';
-import { Like } from './like.entity';
 import { LikesService } from './likes.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { PostsService } from 'src/posts/posts.service';
+import { CommentsService } from 'src/comments/comments.service';
 
-@Controller('/posts/:postId/likes')
+@Controller('/likes')
 @UseGuards(AuthGuard())
 export class LikesController {
   constructor(
     private likesService: LikesService,
-    private postsService: PostsService,
+    private postsService: PostsService, // ✅ Inject PostsService
+    private commentsService: CommentsService,
   ) {}
 
-  @Post()
+  @Post('/post/:postId')
   @UsePipes(ValidationPipe)
-  async createLike(
+  async likePost(
     @Param('postId', ParseIntPipe) postId: number,
     @GetUser() user: User,
-  ): Promise<Like> {
-    const post = await this.postsService.getPostById(postId);
-    return this.likesService.createLike(post, user);
+  ) {
+    return this.likesService.createLike(postId, user, 'post');
   }
 
-  @Delete()
+  @Post('/comments/:commentId')
   @UsePipes(ValidationPipe)
-  async deleteLike(
+  async likeComment(
+    @Param('commentId', ParseIntPipe) commentId: number,
+    @GetUser() user: User,
+  ) {
+    const comment = await this.commentsService.getCommentById(commentId); // ✅ Fetch comment
+    return this.likesService.createLike(commentId, user, 'comment');
+  }
+
+  @Delete('/posts/:postId')
+  async unlikePost(
     @Param('postId', ParseIntPipe) postId: number,
     @GetUser() user: User,
   ): Promise<void> {
     const post = await this.postsService.getPostById(postId);
-    return this.likesService.deleteLike(post, user);
+    return this.likesService.deleteLike(post, user, 'post');
+  }
+
+  @Delete('/comments/:commentId')
+  async unlikeComment(
+    @Param('commentId', ParseIntPipe) commentId: number,
+    @GetUser() user: User,
+  ): Promise<void> {
+    const comment = await this.commentsService.getCommentById(commentId); // ✅ Fetch comment
+    return this.likesService.deleteLike(comment, user, 'comment'); // ✅ Pass the full comment object
   }
 }

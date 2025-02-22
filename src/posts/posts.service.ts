@@ -49,12 +49,26 @@ export class PostsService {
     return this.postRepository.createPost(createPostDto, user, images);
   }
 
-  async updatePostById(id: number, changes: EditPostDto): Promise<void> {
+  async updatePostById(
+    id: number,
+    changes: EditPostDto,
+    user: User,
+  ): Promise<void> {
+    const post = await this.getPostById(id);
+
+    if (!post.canUserEdit(user)) {
+      throw new ForbiddenException("You can't edit this post.");
+    }
+
     await this.postRepository.update(id, changes);
   }
 
-  async deletePostById(id: number): Promise<void> {
+  async deletePostById(id: number, user: User): Promise<void> {
     const post = await this.getPostById(id);
+
+    if (!post.canUserDelete(user)) {
+      throw new ForbiddenException("You can't delete this post.");
+    }
 
     await this.postRepository.manager.query(
       'DELETE FROM "notification" WHERE "postId" = $1',

@@ -48,4 +48,13 @@ export class Post extends BaseEntity {
     onDelete: 'CASCADE', // ✅ Deletes all notifications when the post is deleted
   })
   notifications: Notification[];
+
+  canUserEdit(user: User): boolean {
+    return user.isAdmin() || this.user.id === user.id;
+  }
+
+  // ✅ Check if a user can delete this post
+  canUserDelete(user: User): boolean {
+    return user.isAdmin() || this.user.id === user.id;
+  }
 }

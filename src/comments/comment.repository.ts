@@ -11,7 +11,7 @@ export class CommentRepository extends Repository<Comment> {
     super();
   }
 
-  async getComments(postId: number): Promise<any[]> {
+  async getComments(postId: number, user: User): Promise<any[]> {
     const commentInfo = await this.manager.query(
       `SELECT id FROM comment WHERE "postId" = $1`,
       [postId],
@@ -20,6 +20,8 @@ export class CommentRepository extends Repository<Comment> {
 
     const query = this.createQueryBuilder('comment')
       .leftJoinAndSelect('comment.user', 'user') // ✅ Ensure user details are included
+      .leftJoinAndSelect('comment.likes', 'likes') // ✅ Include likes
+      .leftJoinAndSelect('likes.user', 'likedUser') // ✅ Ensure like users are included
       .whereInIds(ids);
 
     const comments = await query.getMany();
@@ -30,7 +32,9 @@ export class CommentRepository extends Repository<Comment> {
       createdAt: comment.createdAt, // ✅ Return timestamp
       user: comment.user
         ? { id: comment.user.id, name: comment.user.username }
-        : null, // ✅ Return user details
+        : null,
+      likeCount: comment.likeCount(), // ✅ Return total likes
+      isLikedByUser: comment.isLikedByUser(user), // ✅ Return if user liked it
     }));
   }
 
@@ -51,5 +55,13 @@ export class CommentRepository extends Repository<Comment> {
     delete comment.post;
 
     return comment;
+  }
+
+  async getCommentById(commentId: number): Promise<Comment | null> {
+    return this.createQueryBuilder('comment')
+      .leftJoinAndSelect('comment.user', 'user') // ✅ Ensure user is included
+      .leftJoinAndSelect('comment.likes', 'likes') // ✅ Include likes
+      .where('comment.id = :commentId', { commentId })
+      .getOne();
   }
 }

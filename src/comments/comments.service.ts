@@ -42,8 +42,8 @@ export class CommentsService {
     return comment;
   }
 
-  async getComments(postId: number): Promise<Comment[]> {
-    return this.commentRepository.getComments(postId);
+  async getComments(postId: number, user: User): Promise<any[]> {
+    return this.commentRepository.getComments(postId, user); // ✅ Now includes like data
   }
 
   async updateComment(
@@ -124,6 +124,15 @@ export class CommentsService {
     await this.commentRepository.remove(comment);
 
     console.log(`✅ Successfully deleted comment ID: ${commentId}`);
+
     return { message: 'Comment deleted successfully' };
+  }
+
+  async getCommentById(commentId: number): Promise<Comment> {
+    const comment = await this.commentRepository.getCommentById(commentId);
+    if (!comment) {
+      throw new NotFoundException(`Comment with ID ${commentId} not found`);
+    }
+    return comment;
   }
 }

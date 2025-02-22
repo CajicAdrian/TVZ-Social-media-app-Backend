@@ -42,10 +42,9 @@ export class CommentsController {
   @Get()
   async getComments(
     @Param('postId', ParseIntPipe) postId: number,
-  ): Promise<Comment[]> {
-    const comments = await this.commentsService.getComments(postId);
-
-    return comments;
+    @GetUser() user: User, // ✅ Pass logged-in user
+  ): Promise<any[]> {
+    return this.commentsService.getComments(postId, user);
   }
 
   @Patch('/:commentId')

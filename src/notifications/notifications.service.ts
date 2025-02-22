@@ -4,6 +4,7 @@ import { NotificationsRepository } from './notifications.repository';
 import { Notification } from './notifications.entity';
 import { User } from 'src/auth/user.entity';
 import { Post } from 'src/posts/post.entity';
+import { Comment } from 'src/comments/comment.entity';
 import { RegistryHelper } from '../utils/registry.helper';
 import { Connection } from 'typeorm';
 
@@ -16,10 +17,11 @@ export class NotificationsService {
   ) {}
 
   async createNotification(
-    type: 'like' | 'comment',
+    type: 'like' | 'comment' | 'like_comment', // ✅ Allow 'like_comment'
     user: User, // ✅ The user receiving the notification
     fromUser: User, // ✅ The user who performed the action
     post?: Post,
+    comment?: Comment, // ✅ Add comment parameter
   ): Promise<Notification | null> {
     const queryRunner = this.connection.createQueryRunner();
 
@@ -27,66 +29,53 @@ export class NotificationsService {
     await queryRunner.startTransaction(); // ✅ Start transaction
 
     try {
-      // ✅ Fetch user's notification preference from Windows Registry
       const settingKey =
         type === 'like' ? 'likeNotifications' : 'commentNotifications';
       const isEnabled = await RegistryHelper.getSetting(user.id, settingKey);
 
-      console.log(
-        `🔍 Checking ${type} notifications for user ${user.id}:`,
-        isEnabled,
-      );
-
-      // ❌ If notifications are disabled, do NOT create a notification
       if (isEnabled !== '1') {
-        console.log(
-          `❌ ${type} notifications are disabled for user ${user.id}. Skipping notification.`,
-        );
         await queryRunner.rollbackTransaction();
         return null;
       }
 
-      // ✅ Check if a notification already exists to prevent duplicates
       const existingNotification = await queryRunner.manager.findOne(
         Notification,
         {
-          where: { type, user, fromUser, post },
+          where: { type, user, fromUser, post, comment }, // ✅ Include `comment`
           lock: { mode: 'pessimistic_write' }, // ✅ Critical Section (Row Lock)
         },
       );
 
       if (existingNotification) {
-        console.log(`⚠️ Duplicate ${type} notification skipped.`);
         await queryRunner.rollbackTransaction();
         return null;
       }
 
-      // ✅ Create the notification inside the transaction
       const notification = queryRunner.manager.create(Notification, {
         type,
         user,
         fromUser,
         post,
+        comment, // ✅ Store the comment reference
         read: false,
       });
 
       await queryRunner.manager.save(notification);
       await queryRunner.commitTransaction(); // ✅ Commit if successful
-      console.log(`✅ Notification created for ${user.username}.`);
 
       return notification;
     } catch (error) {
-      await queryRunner.rollbackTransaction(); // ❌ Rollback on error
-      console.error(`❌ Failed to create notification:`, error);
+      await queryRunner.rollbackTransaction();
       return null;
     } finally {
-      await queryRunner.release(); // ✅ Release the transaction
+      await queryRunner.release();
     }
   }
+
   async getNotificationsForUser(user: User): Promise<Notification[]> {
     return this.notificationsRepository.find({
       where: { user },
-      relations: ['fromUser', 'post'],
+      relations: ['fromUser', 'post', 'comment'], // ✅ Ensure we fetch comments
       order: { createdAt: 'DESC' },
       take: 5,
     });
@@ -105,26 +94,31 @@ export class NotificationsService {
     await this.notificationsRepository.save(notification);
   }
 
-  /**
-   * ✅ NEW METHOD: Check if a like notification exists for a user on a specific post
-   */
   async getLikeNotification(
     user: User,
-    post: Post,
+    post?: Post,
+    comment?: Comment, // ✅ Allow comment lookup
   ): Promise<Notification | undefined> {
     return this.notificationsRepository.findOne({
-      where: { type: 'like', fromUser: user, post },
+      where: {
+        type: post ? 'like' : 'like_comment',
+        fromUser: user,
+        post,
+        comment,
+      },
     });
   }
 
-  /**
-   * ✅ NEW METHOD: Delete only the like notification for the specific user
-   */
-  async deleteLikeNotification(user: User, post: Post): Promise<void> {
+  async deleteLikeNotification(
+    user: User,
+    target: Post | Comment,
+    type: 'post' | 'comment',
+  ): Promise<void> {
     await this.notificationsRepository.delete({
-      type: 'like',
+      type: type === 'post' ? 'like' : 'like_comment',
       fromUser: { id: user.id },
-      post: { id: post.id },
+      post: type === 'post' ? { id: (target as Post).id } : undefined,
+      comment: type === 'comment' ? { id: (target as Comment).id } : undefined,
     });
   }
 }

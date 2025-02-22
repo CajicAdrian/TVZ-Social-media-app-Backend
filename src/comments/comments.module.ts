@@ -9,6 +9,8 @@ import { CommentsController } from './comments.controller';
 import { CommentsService } from './comments.service';
 import { NotificationsModule } from 'src/notifications/notifications.module';
 import { PassportModule } from '@nestjs/passport';
+import { LikesModule } from 'src/likes/likes.module';
+import { forwardRef } from '@nestjs/common';
 
 @Module({
   imports: [
@@ -20,9 +22,11 @@ import { PassportModule } from '@nestjs/passport';
     ]),
     PostsModule,
     AuthModule,
-    NotificationsModule,
+    forwardRef(() => NotificationsModule), // ✅ Fix circular dependency
+    forwardRef(() => LikesModule),
   ],
   controllers: [CommentsController],
   providers: [CommentsService],
+  exports: [CommentsService],
 })
 export class CommentsModule {}
