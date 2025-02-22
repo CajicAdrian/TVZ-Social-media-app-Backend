@@ -11,12 +11,15 @@ import { CommentRepository } from './comment.repository';
 import { Comment } from './comment.entity';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { PostRepository } from 'src/posts/post.repository';
 
 @Injectable()
 export class CommentsService {
   constructor(
     @InjectRepository(CommentRepository)
     private commentRepository: CommentRepository,
+    @InjectRepository(PostRepository)
+    private postRepository: PostRepository,
     private notificationsService: NotificationsService,
   ) {}
 
@@ -24,7 +27,7 @@ export class CommentsService {
     createCommentDto: CreateCommentDto,
     post: Post,
     user: User,
-  ): Promise<Comment> {
+  ): Promise<{ comment: Comment; commentCount: number }> {
     const comment = await this.commentRepository.createComment(
       createCommentDto,
       post,
@@ -39,7 +42,11 @@ export class CommentsService {
       post,
     );
 
-    return comment;
+    const updatedPost = await this.postRepository.findOne(post.id, {
+      relations: ['comments'], // Ensure we get updated comments count
+    });
+
+    return { comment, commentCount: updatedPost?.commentCount || 0 };
   }
 
   async getComments(postId: number, user: User): Promise<any[]> {
@@ -91,7 +98,7 @@ export class CommentsService {
     postId: number,
     commentId: number,
     user: User,
-  ): Promise<{ message: string }> {
+  ): Promise<{ message: string; commentCount: number }> {
     console.log(
       `🗑️ Attempting to delete CommentID: ${commentId} under PostID: ${postId}`,
     );
@@ -123,9 +130,17 @@ export class CommentsService {
     console.log(`✅ Comment found, deleting...`);
     await this.commentRepository.remove(comment);
 
+    // ✅ Fetch updated comment count after deletion
+    const updatedPost = await this.postRepository.findOne(postId, {
+      relations: ['comments'], // Ensure we get updated comments count
+    });
+
     console.log(`✅ Successfully deleted comment ID: ${commentId}`);
 
-    return { message: 'Comment deleted successfully' };
+    return {
+      message: 'Comment deleted successfully',
+      commentCount: updatedPost?.commentCount || 0,
+    };
   }
 
   async getCommentById(commentId: number): Promise<Comment> {

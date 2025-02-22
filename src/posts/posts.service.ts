@@ -11,6 +11,7 @@ import { EditPostDto } from './dto/edit-post.dto';
 import { Post } from './post.entity';
 import { PostRepository } from './post.repository';
 import { Role } from 'src/auth/role.enum';
+import { Image } from 'src/images/image.entity';
 
 @Injectable()
 export class PostsService {
@@ -27,7 +28,7 @@ export class PostsService {
 
   async getPostById(id: number): Promise<Post> {
     const found = await this.postRepository.findOne(id, {
-      relations: ['user', 'images'],
+      relations: ['user', 'images', 'comments'],
     });
 
     if (!found) {
@@ -36,8 +37,22 @@ export class PostsService {
     return found;
   }
 
-  async getPostsByUser(userId: number): Promise<Post[]> {
-    return this.postRepository.findByUser(userId);
+  async getPostsByUser(
+    userId: number,
+  ): Promise<
+    Array<{
+      id: number;
+      title: string;
+      description: string;
+      username: string;
+      profileImage?: string;
+      images: Image[];
+      likeCount: number;
+      commentCount: number;
+      likedByCurrentUser?: boolean;
+    }>
+  > {
+    return this.postRepository.getPostsByUser(userId);
   }
 
   async getCommentIds(id: number): Promise<number[]> {

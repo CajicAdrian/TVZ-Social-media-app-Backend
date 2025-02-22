@@ -1,3 +1,4 @@
+import { Expose } from 'class-transformer';
 import { User } from 'src/auth/user.entity';
 import { Comment } from 'src/comments/comment.entity';
 import { Image } from 'src/images/image.entity';
@@ -35,6 +36,11 @@ export class Post extends BaseEntity {
   @JoinTable()
   @OneToMany(() => Comment, (comment) => comment.post, { cascade: true })
   comments: Comment[];
+
+  @Expose()
+  get commentCount(): number {
+    return this.comments?.length || 0;
+  }
 
   @JoinTable()
   @OneToMany(() => Like, (like) => like.post, { cascade: true })

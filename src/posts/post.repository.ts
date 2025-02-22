@@ -34,8 +34,8 @@ export class PostRepository extends Repository<Post> {
       .leftJoinAndSelect('post.images', 'images')
       .leftJoinAndSelect('post.user', 'user') // ✅ Ensure user relation is joined
       .addSelect(['user.profileImage', 'user.username']) // ✅ Extract profileImage & username
-      .loadRelationCountAndMap('post.likeCount', 'post.likes') // ✅ Dynamically count likes
-      .loadRelationCountAndMap('post.commentCount', 'post.comments'); // ✅ Dynamically count comments
+      .leftJoinAndSelect('post.comments', 'comments') // ✅ This makes sure `commentCount` works
+      .loadRelationCountAndMap('post.likeCount', 'post.likes'); // ✅ Dynamically count likes
 
     if (user) {
       query = query.loadRelationCountAndMap(
@@ -59,19 +59,33 @@ export class PostRepository extends Repository<Post> {
       profileImage: post.user?.profileImage || '', // Ensures an empty string instead of undefined
       images: post.images || [], // Ensure it's always an array
       likeCount: (post as any).likeCount || 0, // ✅ Ensure these exist
-      commentCount: (post as any).commentCount || 0, // ✅ Ensure these exist
+      commentCount: post.commentCount || 0, // ✅ Ensure these exist
       likedByCurrentUser: (post as any).likedByCurrentUser ?? false, // ✅ Ensure boolean is always present
     }));
   }
 
-  async findByUser(userId: number): Promise<any[]> {
+  async getPostsByUser(
+    userId: number,
+  ): Promise<
+    Array<{
+      id: number;
+      title: string;
+      description: string;
+      username: string;
+      profileImage?: string;
+      images: Image[];
+      likeCount: number;
+      commentCount: number;
+      likedByCurrentUser?: boolean;
+    }>
+  > {
     const posts = await this.createQueryBuilder('post')
       .leftJoinAndSelect('post.images', 'images')
       .leftJoinAndSelect('post.user', 'user')
       .addSelect(['user.username', 'user.profileImage']) // ✅ Ensure profileImage is selected
       .where('post.userId = :userId', { userId })
+      .leftJoinAndSelect('post.comments', 'comments') // ✅ This makes sure `commentCount` works
       .loadRelationCountAndMap('post.likeCount', 'post.likes')
-      .loadRelationCountAndMap('post.commentCount', 'post.comments')
       .loadRelationCountAndMap(
         'post.likedByCurrentUser',
         'post.likes',
@@ -88,7 +102,7 @@ export class PostRepository extends Repository<Post> {
       profileImage: post.user.profileImage, // ✅ This ensures profile image is included
       images: post.images,
       likeCount: (post as any).likeCount || 0, // ✅ Ensure these exist
-      commentCount: (post as any).commentCount || 0, // ✅ Ensure these exist
+      commentCount: post.commentCount || 0, // ✅ Ensure these exist
       likedByCurrentUser: (post as any).likedByCurrentUser ?? false,
     }));
   }

@@ -34,7 +34,7 @@ export class CommentsController {
     @Param('postId', ParseIntPipe) postId: number,
     @Body() createCommentDto: CreateCommentDto,
     @GetUser() user: User,
-  ): Promise<Comment> {
+  ): Promise<{ comment: Comment; commentCount: number }> {
     const post = await this.postsService.getPostById(postId);
     return this.commentsService.createComment(createCommentDto, post, user);
   }
@@ -71,7 +71,7 @@ export class CommentsController {
     @Param('postId', ParseIntPipe) postId: number,
     @Param('commentId', ParseIntPipe) commentId: number,
     @GetUser() user: User,
-  ): Promise<{ message: string }> {
+  ): Promise<{ message: string; commentCount: number }> {
     console.log(
       `🗑️ Deleting Comment - PostID: ${postId}, CommentID: ${commentId}`,
     );

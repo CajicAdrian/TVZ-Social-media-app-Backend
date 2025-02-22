@@ -21,6 +21,7 @@ import { EditPostDto } from './dto/edit-post.dto';
 import type { Post as PostEntity } from './post.entity';
 import { PostsService } from './posts.service';
 import { Role } from 'src/auth/role.enum';
+import { Image } from 'src/images/image.entity';
 
 @Controller('posts')
 @UseGuards(AuthGuard())
@@ -40,7 +41,19 @@ export class PostsController {
   @Get('/user/:userId')
   async getPostsByUser(
     @Param('userId', ParseIntPipe) userId: number,
-  ): Promise<PostEntity[]> {
+  ): Promise<
+    Array<{
+      id: number;
+      title: string;
+      description: string;
+      username: string;
+      profileImage?: string;
+      images: Image[];
+      likeCount: number;
+      commentCount: number;
+      likedByCurrentUser?: boolean;
+    }>
+  > {
     return this.postsService.getPostsByUser(userId);
   }
 
