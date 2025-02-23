@@ -45,9 +45,6 @@ export class Notification extends BaseEntity {
   })
   comment?: Comment; // ✅ Add for comment likes
 
-  @Column({ default: false })
-  read: boolean;
-
   @CreateDateColumn()
   createdAt: Date;
 }

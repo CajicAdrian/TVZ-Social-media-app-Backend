@@ -59,6 +59,8 @@ export class AuthController {
   signUp(
     @Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto,
   ): Promise<User> {
+    console.log('🛠️ SIGNUP ROUTE HIT');
+
     return this.authService.signUp(authCredentialsDto);
   }
 

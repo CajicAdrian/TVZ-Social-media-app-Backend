@@ -23,6 +23,9 @@ import { QuotesModule } from './quotes/quotes.module';
     ImagesModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'static'),
+      serveRoot: '/',
+      renderPath: '/static/*',
+      exclude: ['*.html'],
     }),
     CommentsModule,
     LikesModule,

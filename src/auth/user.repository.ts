@@ -17,9 +17,10 @@ export class UserRepository extends Repository<User> {
     role: Role = Role.USER,
   ): Promise<User> {
     const { username, password } = authCredentialsDto;
-
     const adminUsername = await IniHelper.getSetting('AdminUsername');
     const isAdmin = username === adminUsername;
+
+    console.log('🔍 DEBUG: PEPPER_VALUES from env:', process.env.PEPPER_VALUES);
 
     const user = new User();
     user.username = username;
@@ -27,8 +28,11 @@ export class UserRepository extends Repository<User> {
     // ✅ Use a fixed salt per user instead of a time-based one
     const dynamicSalt = createHash('sha256').update(username).digest('hex');
 
-    const possiblePeppers = process.env.PEPPER_VALUES?.split(',') || [];
+    let possiblePeppers = process.env.PEPPER_VALUES?.split(',') || [];
+    console.log('🔍 PEPPER_VALUES:', possiblePeppers);
+
     if (!possiblePeppers.length) {
+      console.warn('⚠️ No valid pepper found! Generating a new one...');
       throw new InternalServerErrorException(
         'Server misconfiguration: No valid pepper found',
       );
@@ -66,17 +70,17 @@ export class UserRepository extends Repository<User> {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // ✅ Use the stored salt instead of generating a new one
     const dynamicSalt = user.salt;
+    let possiblePeppers = process.env.PEPPER_VALUES?.split(',') || [];
+    console.log('🔍 PEPPER_VALUES:', possiblePeppers);
 
-    const possiblePeppers = process.env.PEPPER_VALUES?.split(',') || [];
     if (!possiblePeppers.length) {
+      console.warn('⚠️ No valid pepper found! Generating a new one...');
       throw new UnauthorizedException(
         'Server misconfiguration: No valid pepper found',
       );
     }
 
-    // 🔐 Try multiple pepper values for validation
     let isValid = false;
     for (const pepper of possiblePeppers) {
       const hashedPassword = createHash('sha256')
@@ -93,7 +97,7 @@ export class UserRepository extends Repository<User> {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    return user; // ✅ Return the authenticated user
+    return user;
   }
 
   async validateUserPassword(

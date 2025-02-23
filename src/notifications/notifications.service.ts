@@ -7,6 +7,7 @@ import { Post } from 'src/posts/post.entity';
 import { Comment } from 'src/comments/comment.entity';
 import { RegistryHelper } from '../utils/registry.helper';
 import { Connection } from 'typeorm';
+import * as net from 'net'; // ✅ Import TCP client
 
 @Injectable()
 export class NotificationsService {
@@ -28,40 +29,61 @@ export class NotificationsService {
     const isEnabled = await RegistryHelper.getSetting(user.id, settingKey);
 
     if (isEnabled !== '1') {
-      return null; // ✅ Skip notification if user has disabled it
+      return null;
     }
 
-    // ✅ Ensure `postTitle` is assigned per post (check only if the specific post has an existing notification)
     let postTitle: string | null = post?.title || null;
 
     if (post) {
-      // ✅ Check if there is already a notification for *this* user and *this* post
       const existingNotification = await this.notificationsRepository.findOne({
-        where: { user, post, type }, // ✅ Only check for this post, not all posts of the user
+        where: { user, post, type },
       });
 
       if (existingNotification) {
-        postTitle = existingNotification.postTitle; // ✅ Use stored title for this post
+        postTitle = existingNotification.postTitle;
       }
     }
 
-    // ✅ Create new notification with the correct title
     const notification = this.notificationsRepository.create({
       type,
       user,
       fromUser,
       post,
       comment,
-      postTitle, // ✅ Each post gets its own title
-      read: false,
+      postTitle,
     });
 
-    return this.notificationsRepository.save(notification);
+    const savedNotification = await this.notificationsRepository.save(
+      notification,
+    );
+
+    // ✅ Send notification to `tcp-server.ts` over TCP (instead of WebSocket)
+    const client = new net.Socket();
+    client.connect(4000, 'localhost', () => {
+      const message = JSON.stringify({
+        id: savedNotification.id,
+        type: savedNotification.type,
+        createdAt: savedNotification.createdAt,
+        fromUser: {
+          id: savedNotification.fromUser.id,
+          username: savedNotification.fromUser.username,
+          profileImage: savedNotification.fromUser.profileImage || '',
+        },
+        postTitle: savedNotification.postTitle || 'Unknown Post',
+      });
+
+      client.write(message); // ✅ Send notification over TCP
+      client.end(); // ✅ Close the connection after sending
+    });
+
+    console.log('📡 Sent notification to TCP Server:', savedNotification);
+
+    return savedNotification;
   }
 
-  async getNotificationsForUser(user: User): Promise<any[]> {
+  async getNotificationsForUser(userId: number): Promise<any[]> {
     const notifications = await this.notificationsRepository.find({
-      where: { user },
+      where: { user: { id: userId } },
       relations: ['fromUser', 'comment'],
       order: { createdAt: 'DESC' },
       take: 5,
@@ -70,7 +92,6 @@ export class NotificationsService {
     return notifications.map((notification) => ({
       id: notification.id,
       type: notification.type,
-      read: notification.read,
       createdAt: notification.createdAt,
       fromUser: {
         id: notification.fromUser.id,
@@ -79,19 +100,6 @@ export class NotificationsService {
       },
       postTitle: notification.postTitle || 'Unknown Post', // ✅ Use `postTitle`
     }));
-  }
-
-  async markAsRead(notificationId: number, user: User): Promise<void> {
-    const notification = await this.notificationsRepository.findOne({
-      where: { id: notificationId, user },
-    });
-
-    if (!notification) {
-      throw new Error('Notification not found');
-    }
-
-    notification.read = true;
-    await this.notificationsRepository.save(notification);
   }
 
   async getLikeNotification(

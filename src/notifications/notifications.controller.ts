@@ -20,16 +20,12 @@ export class NotificationsController {
   @Get()
   async getNotifications(@GetUser() user: User): Promise<Notification[]> {
     const notifications = await this.notificationsService.getNotificationsForUser(
-      user,
+      user.id,
     );
     return notifications;
   }
-
-  @Patch('/:id/read')
-  async markAsRead(
-    @Param('id', ParseIntPipe) id: number,
-    @GetUser() user: User,
-  ): Promise<void> {
-    await this.notificationsService.markAsRead(id, user);
+  @Get(':userId') // ✅ Fetch notifications for a specific user
+  async getUserNotifications(@Param('userId') userId: number) {
+    return this.notificationsService.getNotificationsForUser(Number(userId)); // ✅ Ensure userId is a number
   }
 }
