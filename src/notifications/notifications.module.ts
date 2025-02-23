@@ -9,6 +9,7 @@ import { PassportModule } from '@nestjs/passport';
 import { CommentsModule } from 'src/comments/comments.module';
 import { forwardRef } from '@nestjs/common';
 import { LikesModule } from 'src/likes/likes.module';
+import { NotificationsGateway } from './notifications.gateway';
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { LikesModule } from 'src/likes/likes.module';
     forwardRef(() => LikesModule), // ✅ Fix circular dependency
   ],
   controllers: [NotificationsController],
-  providers: [NotificationsService],
+  providers: [NotificationsService, NotificationsGateway],
   exports: [NotificationsService],
 })
 export class NotificationsModule {}

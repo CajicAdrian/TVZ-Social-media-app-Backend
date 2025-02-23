@@ -31,16 +31,17 @@ export class NotificationsService {
       return null; // ✅ Skip notification if user has disabled it
     }
 
-    // ✅ Find existing notification for the post
+    // ✅ Ensure `postTitle` is assigned per post (check only if the specific post has an existing notification)
     let postTitle: string | null = post?.title || null;
 
     if (post) {
+      // ✅ Check if there is already a notification for *this* user and *this* post
       const existingNotification = await this.notificationsRepository.findOne({
-        where: { user, post },
+        where: { user, post, type }, // ✅ Only check for this post, not all posts of the user
       });
 
       if (existingNotification) {
-        postTitle = existingNotification.postTitle; // ✅ Use original title
+        postTitle = existingNotification.postTitle; // ✅ Use stored title for this post
       }
     }
 
@@ -51,7 +52,7 @@ export class NotificationsService {
       fromUser,
       post,
       comment,
-      postTitle,
+      postTitle, // ✅ Each post gets its own title
       read: false,
     });
 
