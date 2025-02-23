@@ -17,68 +17,67 @@ export class NotificationsService {
   ) {}
 
   async createNotification(
-    type: 'like' | 'comment' | 'like_comment', // ✅ Allow 'like_comment'
-    user: User, // ✅ The user receiving the notification
-    fromUser: User, // ✅ The user who performed the action
+    type: 'like' | 'comment' | 'like_comment',
+    user: User,
+    fromUser: User,
     post?: Post,
-    comment?: Comment, // ✅ Add comment parameter
+    comment?: Comment,
   ): Promise<Notification | null> {
-    const queryRunner = this.connection.createQueryRunner();
+    const settingKey =
+      type === 'comment' ? 'commentNotifications' : 'likeNotifications';
+    const isEnabled = await RegistryHelper.getSetting(user.id, settingKey);
 
-    await queryRunner.connect();
-    await queryRunner.startTransaction(); // ✅ Start transaction
+    if (isEnabled !== '1') {
+      return null; // ✅ Skip notification if user has disabled it
+    }
 
-    try {
-      const settingKey =
-        type === 'like' ? 'likeNotifications' : 'commentNotifications';
-      const isEnabled = await RegistryHelper.getSetting(user.id, settingKey);
+    // ✅ Find existing notification for the post
+    let postTitle: string | null = post?.title || null;
 
-      if (isEnabled !== '1') {
-        await queryRunner.rollbackTransaction();
-        return null;
-      }
-
-      const existingNotification = await queryRunner.manager.findOne(
-        Notification,
-        {
-          where: { type, user, fromUser, post, comment }, // ✅ Include `comment`
-          lock: { mode: 'pessimistic_write' }, // ✅ Critical Section (Row Lock)
-        },
-      );
-
-      if (existingNotification) {
-        await queryRunner.rollbackTransaction();
-        return null;
-      }
-
-      const notification = queryRunner.manager.create(Notification, {
-        type,
-        user,
-        fromUser,
-        post,
-        comment, // ✅ Store the comment reference
-        read: false,
+    if (post) {
+      const existingNotification = await this.notificationsRepository.findOne({
+        where: { user, post },
       });
 
-      await queryRunner.manager.save(notification);
-      await queryRunner.commitTransaction(); // ✅ Commit if successful
-
-      return notification;
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      return null;
-    } finally {
-      await queryRunner.release();
+      if (existingNotification) {
+        postTitle = existingNotification.postTitle; // ✅ Use original title
+      }
     }
+
+    // ✅ Create new notification with the correct title
+    const notification = this.notificationsRepository.create({
+      type,
+      user,
+      fromUser,
+      post,
+      comment,
+      postTitle,
+      read: false,
+    });
+
+    return this.notificationsRepository.save(notification);
   }
 
-  async getNotificationsForUser(user: User): Promise<Notification[]> {
-    return this.notificationsRepository.find({
+  async getNotificationsForUser(user: User): Promise<any[]> {
+    const notifications = await this.notificationsRepository.find({
       where: { user },
-      relations: ['fromUser', 'post', 'comment'], // ✅ Ensure we fetch comments
+      relations: ['fromUser', 'comment'],
       order: { createdAt: 'DESC' },
       take: 5,
     });
+
+    return notifications.map((notification) => ({
+      id: notification.id,
+      type: notification.type,
+      read: notification.read,
+      createdAt: notification.createdAt,
+      fromUser: {
+        id: notification.fromUser.id,
+        username: notification.fromUser.username,
+        profileImage: notification.fromUser.profileImage || '',
+      },
+      postTitle: notification.postTitle || 'Unknown Post', // ✅ Use `postTitle`
+    }));
   }
 
   async markAsRead(notificationId: number, user: User): Promise<void> {

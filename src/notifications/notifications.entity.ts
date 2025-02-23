@@ -36,6 +36,9 @@ export class Notification extends BaseEntity {
   })
   post?: Post;
 
+  @Column({ nullable: true }) // ✅ New lookup field
+  postTitle: string; // ✅ Stores post title at notification creation
+
   @ManyToOne(() => Comment, (comment) => comment.notifications, {
     nullable: true,
     onDelete: 'CASCADE',

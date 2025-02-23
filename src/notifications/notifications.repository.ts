@@ -17,8 +17,9 @@ export class NotificationsRepository extends Repository<Notification> {
       type,
       user,
       fromUser,
-      post: post || null,
       comment: comment || null, // ✅ Ensure comments are stored
+      postTitle: post ? post.title : null,
+      read: false,
     });
     return this.save(notification);
   }

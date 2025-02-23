@@ -63,23 +63,15 @@ export class LikesService {
 
     // ✅ Fix: Ensure `post` or `comment` is passed separately
     if (likeNotificationsEnabled === '1') {
-      if (type === 'post') {
-        await this.notificationService.createNotification(
-          'like',
-          target.user,
-          user,
-          target as Post,
-          undefined, // No comment
-        );
-      } else {
-        await this.notificationService.createNotification(
-          'like_comment', // New type for comment likes
-          target.user,
-          user,
-          undefined, // No post
-          target as Comment,
-        );
-      }
+      const notificationType = type === 'post' ? 'like' : 'like_comment';
+
+      await this.notificationService.createNotification(
+        notificationType,
+        target.user,
+        user,
+        type === 'post' ? (target as Post) : undefined, // ✅ Only pass post if it's a post like
+        type === 'comment' ? (target as Comment) : undefined, // ✅ Only pass comment if it's a comment like
+      );
     }
 
     return like;
