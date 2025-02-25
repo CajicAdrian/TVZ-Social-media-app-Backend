@@ -36,6 +36,12 @@ export class User extends BaseEntity {
   @Column({ default: Role.USER })
   role: string;
 
+  @Column({ type: 'text' })
+  publicKey: string;
+
+  @Column({ type: 'text', select: false }) // ✅ Hides privateKey in queries
+  privateKey: string;
+
   // ✅ Ensuring Image is deleted when User is deleted
   @OneToOne(() => Image, (image) => image.users, {
     cascade: true,

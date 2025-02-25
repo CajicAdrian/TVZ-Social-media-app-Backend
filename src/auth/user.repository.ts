@@ -9,6 +9,7 @@ import { User } from './user.entity';
 import { Role } from './role.enum';
 import { IniHelper } from 'src/utils/ini.helper';
 import { createHash } from 'crypto';
+import { generateRSAKeyPair } from 'src/utils/utils';
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
@@ -49,6 +50,11 @@ export class UserRepository extends Repository<User> {
     user.salt = dynamicSalt; // Store the salt
 
     user.role = isAdmin ? Role.ADMIN : Role.USER;
+
+    // ✅ Generate RSA Key Pair
+    const { publicKey, privateKey } = generateRSAKeyPair();
+    user.publicKey = publicKey;
+    user.privateKey = privateKey;
 
     try {
       await user.save();

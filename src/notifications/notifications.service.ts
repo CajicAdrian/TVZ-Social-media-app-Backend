@@ -87,6 +87,7 @@ export class NotificationsService {
       relations: ['fromUser', 'comment'],
       order: { createdAt: 'DESC' },
       take: 5,
+      select: ['id', 'type', 'postTitle', 'createdAt'],
     });
 
     return notifications.map((notification) => ({

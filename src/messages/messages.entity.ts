@@ -18,11 +18,20 @@ export class Message extends BaseEntity {
   receiverId: number;
 
   @Column('text')
-  message: string;
+  encryptedMessage: string;
+
+  @Column('varchar', { length: 32 }) // ✅ AES IV
+  iv: string;
+
+  @Column('text')
+  encryptedAESKey: string;
+
+  @Column()
+  senderSignature: string;
+
+  @Column({ nullable: true })
+  recipientSignature?: string;
 
   @CreateDateColumn()
   createdAt: Date;
-
-  @Column({ default: false })
-  isRead: boolean;
 }
