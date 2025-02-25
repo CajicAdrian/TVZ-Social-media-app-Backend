@@ -42,6 +42,16 @@ export class NotificationsService {
 
     let postTitle: string | null = post?.title || null;
 
+    if (comment && !postTitle) {
+      const commentWithPost = await this.connection
+        .getRepository(Comment)
+        .findOne(comment.id, { relations: ['post'] });
+
+      if (commentWithPost && commentWithPost.post) {
+        postTitle = commentWithPost.post.title;
+      }
+    }
+
     if (post) {
       const existingNotification = await this.notificationsRepository.findOne({
         where: { user, post, type },
