@@ -24,6 +24,6 @@ export class Like extends BaseEntity {
   @ManyToOne(() => Comment, (comment) => comment.likes, {
     eager: false,
     nullable: true,
-  }) // ✅ Allow likes for comments
+  })
   comment: Comment;
 }

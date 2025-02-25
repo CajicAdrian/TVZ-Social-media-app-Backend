@@ -38,19 +38,16 @@ export class ImagesController {
       'profile',
     );
 
-    console.log('✅ Image Uploaded:', uploadedImage); // Debugging
-
     return {
       fileName: uploadedImage.fileName,
-      filePath: uploadedImage.filePath.replace('static', ''), // Should return `/images/user-image/file.png`
+      filePath: uploadedImage.filePath.replace('static', ''),
     };
   }
-  // Upload Post Image
   @Post('/post-images')
   @UseInterceptors(
     FileInterceptor('image', {
       storage: diskStorage({
-        destination: './static/images/post-images', // Default path
+        destination: './static/images/post-images',
         filename: (_req, file, cb) => {
           const randomName = uuidv1();
           return cb(null, `${randomName}${extname(file.originalname)}`);
@@ -59,7 +56,7 @@ export class ImagesController {
     }),
   )
   async uploadPostImage(@UploadedFile() image: Express.Multer.File) {
-    return this.imagesService.createImage(null, image, 'post'); // Pass 'post' as type
+    return this.imagesService.createImage(null, image, 'post');
   }
 
   @Get()

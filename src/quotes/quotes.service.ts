@@ -13,7 +13,7 @@ export class QuotesService {
       this.logger.log('🌐 Sending request to Quotable API...');
 
       const response = await axios.get('https://api.quotable.io/random', {
-        httpsAgent: new https.Agent({ rejectUnauthorized: false }), // ✅ Should work now
+        httpsAgent: new https.Agent({ rejectUnauthorized: false }),
       });
 
       this.logger.log(`📢 Full API Response: ${JSON.stringify(response.data)}`);

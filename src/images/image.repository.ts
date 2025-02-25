@@ -14,7 +14,7 @@ export class ImageRepository extends Repository<Image> {
 
     const imageEntity = new Image();
     imageEntity.fileName = image.filename;
-    imageEntity.filePath = filePath; // Use the correct filePath based on type
+    imageEntity.filePath = filePath;
 
     await imageEntity.save();
     return imageEntity;

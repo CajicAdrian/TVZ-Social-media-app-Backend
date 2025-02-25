@@ -8,7 +8,6 @@ import {
   ParseIntPipe,
   Patch,
   Post,
-  Query,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -20,7 +19,6 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { EditPostDto } from './dto/edit-post.dto';
 import type { Post as PostEntity } from './post.entity';
 import { PostsService } from './posts.service';
-import { Role } from 'src/auth/role.enum';
 import { Image } from 'src/images/image.entity';
 
 @Controller('posts')
@@ -74,7 +72,6 @@ export class PostsController {
   ): Promise<void> {
     const post = await this.getPostById(id);
 
-    // ✅ Use `canUserEdit()` instead of manual role checking
     if (!post.canUserEdit(user)) {
       throw new ForbiddenException("You can't edit this post.");
     }
@@ -89,7 +86,6 @@ export class PostsController {
   ): Promise<void> {
     const post = await this.getPostById(id);
 
-    // ✅ Use `canUserDelete()` instead of manual role checking
     if (!post.canUserDelete(user)) {
       throw new ForbiddenException("You can't delete this post.");
     }

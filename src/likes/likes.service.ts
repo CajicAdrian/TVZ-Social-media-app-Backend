@@ -43,25 +43,21 @@ export class LikesService {
       throw new Error(`${type} not found`);
     }
 
-    // ✅ Fix: Ensure correct relation when checking existing likes
     const existingLike = await this.likeRepository.findOne({
       where: { user, [type]: target },
     });
 
     if (existingLike) {
-      return existingLike; // Prevent duplicate likes
+      return existingLike;
     }
 
-    // ✅ Fix: Pass `type` to `createLike`
     const like = await this.likeRepository.createLike(target, user, type);
 
-    // ✅ Fetch notification setting
     const likeNotificationsEnabled = await RegistryHelper.getSetting(
       target.user.id,
       'likeNotifications',
     );
 
-    // ✅ Fix: Ensure `post` or `comment` is passed separately
     if (likeNotificationsEnabled === '1') {
       const notificationType = type === 'post' ? 'like' : 'like_comment';
 
@@ -69,8 +65,8 @@ export class LikesService {
         notificationType,
         target.user,
         user,
-        type === 'post' ? (target as Post) : undefined, // ✅ Only pass post if it's a post like
-        type === 'comment' ? (target as Comment) : undefined, // ✅ Only pass comment if it's a comment like
+        type === 'post' ? (target as Post) : undefined,
+        type === 'comment' ? (target as Comment) : undefined,
       );
     }
 

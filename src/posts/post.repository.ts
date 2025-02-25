@@ -32,10 +32,10 @@ export class PostRepository extends Repository<Post> {
   > {
     let query = this.createQueryBuilder('post')
       .leftJoinAndSelect('post.images', 'images')
-      .leftJoinAndSelect('post.user', 'user') // ✅ Ensure user relation is joined
-      .addSelect(['user.profileImage', 'user.username']) // ✅ Extract profileImage & username
-      .leftJoinAndSelect('post.comments', 'comments') // ✅ This makes sure `commentCount` works
-      .loadRelationCountAndMap('post.likeCount', 'post.likes'); // ✅ Dynamically count likes
+      .leftJoinAndSelect('post.user', 'user')
+      .addSelect(['user.profileImage', 'user.username'])
+      .leftJoinAndSelect('post.comments', 'comments')
+      .loadRelationCountAndMap('post.likeCount', 'post.likes');
 
     if (user) {
       query = query.loadRelationCountAndMap(
@@ -50,17 +50,16 @@ export class PostRepository extends Repository<Post> {
 
     const posts = await query.getMany();
 
-    // ✅ Explicitly map dynamic properties to avoid type issues
     return posts.map((post) => ({
       id: post.id,
       title: post.title,
       description: post.description,
       username: post.user?.username || 'Unknown',
-      profileImage: post.user?.profileImage || '', // Ensures an empty string instead of undefined
-      images: post.images || [], // Ensure it's always an array
-      likeCount: (post as any).likeCount || 0, // ✅ Ensure these exist
-      commentCount: post.commentCount || 0, // ✅ Ensure these exist
-      likedByCurrentUser: (post as any).likedByCurrentUser ?? false, // ✅ Ensure boolean is always present
+      profileImage: post.user?.profileImage || '',
+      images: post.images || [],
+      likeCount: (post as any).likeCount || 0,
+      commentCount: post.commentCount || 0,
+      likedByCurrentUser: (post as any).likedByCurrentUser ?? false,
     }));
   }
 
@@ -82,9 +81,9 @@ export class PostRepository extends Repository<Post> {
     const posts = await this.createQueryBuilder('post')
       .leftJoinAndSelect('post.images', 'images')
       .leftJoinAndSelect('post.user', 'user')
-      .addSelect(['user.username', 'user.profileImage']) // ✅ Ensure profileImage is selected
+      .addSelect(['user.username', 'user.profileImage'])
       .where('post.userId = :userId', { userId })
-      .leftJoinAndSelect('post.comments', 'comments') // ✅ This makes sure `commentCount` works
+      .leftJoinAndSelect('post.comments', 'comments')
       .loadRelationCountAndMap('post.likeCount', 'post.likes')
       .loadRelationCountAndMap(
         'post.likedByCurrentUser',
@@ -92,7 +91,7 @@ export class PostRepository extends Repository<Post> {
         'ourLike',
         (qb) => qb.andWhere('ourLike.userId = :userId', { userId }),
       )
-      .orderBy('post.createdAt', 'DESC') // ✅ Sort by newest first
+      .orderBy('post.createdAt', 'DESC')
       .getMany();
 
     return posts.map((post) => ({
@@ -100,10 +99,10 @@ export class PostRepository extends Repository<Post> {
       title: post.title,
       description: post.description,
       username: post.user.username,
-      profileImage: post.user.profileImage, // ✅ This ensures profile image is included
+      profileImage: post.user.profileImage,
       images: post.images,
-      likeCount: (post as any).likeCount || 0, // ✅ Ensure these exist
-      commentCount: post.commentCount || 0, // ✅ Ensure these exist
+      likeCount: (post as any).likeCount || 0,
+      commentCount: post.commentCount || 0,
       likedByCurrentUser: (post as any).likedByCurrentUser ?? false,
     }));
   }

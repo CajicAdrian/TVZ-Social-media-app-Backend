@@ -39,17 +39,15 @@ export class User extends BaseEntity {
   @Column({ type: 'text' })
   publicKey: string;
 
-  @Column({ type: 'text', select: false }) // ✅ Hides privateKey in queries
+  @Column({ type: 'text', select: false })
   privateKey: string;
 
-  // ✅ Ensuring Image is deleted when User is deleted
   @OneToOne(() => Image, (image) => image.users, {
     cascade: true,
     onDelete: 'CASCADE',
   })
   images: Image;
 
-  // ✅ Delete all Posts when User is deleted
   @OneToMany(() => Post, (post) => post.user, {
     eager: true,
     cascade: true,
@@ -57,7 +55,6 @@ export class User extends BaseEntity {
   })
   posts: Post[];
 
-  // ✅ Delete all Comments when User is deleted
   @OneToMany(() => Comment, (comment) => comment.user, {
     eager: false,
     cascade: true,
@@ -65,7 +62,6 @@ export class User extends BaseEntity {
   })
   comments: Comment[];
 
-  // ✅ Delete all Likes when User is deleted
   @OneToMany(() => Like, (like) => like.user, {
     eager: false,
     cascade: true,
@@ -73,7 +69,6 @@ export class User extends BaseEntity {
   })
   likes: Like[];
 
-  // ✅ Delete all Notifications when User is deleted
   @OneToMany(() => Notification, (notification) => notification.user, {
     eager: false,
     cascade: true,
@@ -99,36 +94,32 @@ export class User extends BaseEntity {
 
   async validatePassword(password: string): Promise<boolean> {
     if (!this.passwords || this.passwords.length === 0) {
-      return false; // No password history available
+      return false;
     }
 
-    // 🔍 Generate dynamic salt (same rule as sign-up)
     const timestamp = Math.floor(Date.now() / 1000).toString();
     const dynamicSalt = createHash('sha256')
       .update(this.username + timestamp)
       .digest('hex');
 
-    // 🔍 Retrieve list of possible peppers from .env
     const possiblePeppers = process.env.PEPPER_VALUES?.split(',') || [];
     if (!possiblePeppers.length) {
       throw new Error('Server misconfiguration: No valid pepper found');
     }
 
-    // 🔐 Try all possible peppers to match one of the stored passwords
     for (const pepper of possiblePeppers) {
       const hashedInputPassword = createHash('sha256')
         .update(password + pepper + dynamicSalt)
         .digest('hex');
 
       if (this.passwords.includes(hashedInputPassword)) {
-        return true; // ✅ Password is correct
+        return true;
       }
     }
 
-    return false; // ❌ No match found
+    return false;
   }
 
-  // ✅ Instance Method: Check if the user is an admin
   isAdmin(): boolean {
     return this.role === Role.ADMIN;
   }

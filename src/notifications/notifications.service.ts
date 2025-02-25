@@ -7,12 +7,12 @@ import { Post } from 'src/posts/post.entity';
 import { Comment } from 'src/comments/comment.entity';
 import { RegistryHelper } from '../utils/registry.helper';
 import { Connection } from 'typeorm';
-import * as net from 'net'; // ✅ Import TCP client
+import * as net from 'net';
 
 @Injectable()
 export class NotificationsService {
   constructor(
-    private readonly connection: Connection, // ✅ Inject database connection
+    private readonly connection: Connection,
     @InjectRepository(NotificationsRepository)
     private notificationsRepository: NotificationsRepository,
   ) {}
@@ -57,7 +57,6 @@ export class NotificationsService {
       notification,
     );
 
-    // ✅ Send notification to `tcp-server.ts` over TCP (instead of WebSocket)
     const client = new net.Socket();
     client.connect(4000, 'localhost', () => {
       const message = JSON.stringify({
@@ -72,12 +71,9 @@ export class NotificationsService {
         postTitle: savedNotification.postTitle || 'Unknown Post',
       });
 
-      client.write(message); // ✅ Send notification over TCP
-      client.end(); // ✅ Close the connection after sending
+      client.write(message);
+      client.end();
     });
-
-    console.log('📡 Sent notification to TCP Server:', savedNotification);
-
     return savedNotification;
   }
 
@@ -99,14 +95,14 @@ export class NotificationsService {
         username: notification.fromUser.username,
         profileImage: notification.fromUser.profileImage || '',
       },
-      postTitle: notification.postTitle || 'Unknown Post', // ✅ Use `postTitle`
+      postTitle: notification.postTitle || 'Unknown Post',
     }));
   }
 
   async getLikeNotification(
     user: User,
     post?: Post,
-    comment?: Comment, // ✅ Allow comment lookup
+    comment?: Comment,
   ): Promise<Notification | undefined> {
     return this.notificationsRepository.findOne({
       where: {

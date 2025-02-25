@@ -24,7 +24,7 @@ import { forwardRef } from '@nestjs/common';
     ]),
     PostsModule,
     AuthModule,
-    forwardRef(() => NotificationsModule), // ✅ Fix circular dependency
+    forwardRef(() => NotificationsModule),
     forwardRef(() => CommentsModule),
   ],
   controllers: [LikesController],

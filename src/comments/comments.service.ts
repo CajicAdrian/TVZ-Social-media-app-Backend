@@ -34,7 +34,6 @@ export class CommentsService {
       user,
     );
 
-    // Trigger notification for the comment
     await this.notificationsService.createNotification(
       'comment',
       post.user,
@@ -43,14 +42,14 @@ export class CommentsService {
     );
 
     const updatedPost = await this.postRepository.findOne(post.id, {
-      relations: ['comments'], // Ensure we get updated comments count
+      relations: ['comments'],
     });
 
     return { comment, commentCount: updatedPost?.commentCount || 0 };
   }
 
   async getComments(postId: number, user: User): Promise<any[]> {
-    return this.commentRepository.getComments(postId, user); // ✅ Now includes like data
+    return this.commentRepository.getComments(postId, user);
   }
 
   async updateComment(
@@ -59,38 +58,29 @@ export class CommentsService {
     updateCommentDto: UpdateCommentDto,
     user: User,
   ): Promise<Comment> {
-    console.log(
-      `🔍 Looking for CommentID: ${commentId} under PostID: ${postId}`,
-    );
-
     const comment = await this.commentRepository.findOne({
       where: { id: commentId },
       relations: ['post', 'user'],
     });
 
     if (!comment) {
-      console.log(`❌ Comment ID ${commentId} not found!`);
       throw new NotFoundException(`Comment with ID ${commentId} not found`);
     }
 
     if (comment.post.id !== postId) {
-      console.log(`❌ Comment ${commentId} does NOT belong to Post ${postId}`);
       throw new NotFoundException(
         `Comment ${commentId} does not belong to post ${postId}`,
       );
     }
 
     if (comment.user.id !== user.id) {
-      console.log(`❌ User ${user.id} is not authorized to edit this comment`);
       throw new ForbiddenException('You can only edit your own comments');
     }
 
-    console.log(`✅ Found comment, updating content...`);
     comment.content = updateCommentDto.content;
     comment.updatedAt = new Date();
     await this.commentRepository.save(comment);
 
-    console.log(`✅ Successfully updated comment ID: ${commentId}`);
     return comment;
   }
 
@@ -99,43 +89,30 @@ export class CommentsService {
     commentId: number,
     user: User,
   ): Promise<{ message: string; commentCount: number }> {
-    console.log(
-      `🗑️ Attempting to delete CommentID: ${commentId} under PostID: ${postId}`,
-    );
-
     const comment = await this.commentRepository.findOne({
       where: { id: commentId },
       relations: ['post', 'user'],
     });
 
     if (!comment) {
-      console.log(`❌ Comment ID ${commentId} not found!`);
       throw new NotFoundException(`Comment with ID ${commentId} not found`);
     }
 
     if (comment.post.id !== postId) {
-      console.log(`❌ Comment ${commentId} does NOT belong to Post ${postId}`);
       throw new NotFoundException(
         `Comment ${commentId} does not belong to post ${postId}`,
       );
     }
 
     if (comment.user.id !== user.id) {
-      console.log(
-        `❌ User ${user.id} is not authorized to delete this comment`,
-      );
       throw new ForbiddenException('You can only delete your own comments');
     }
 
-    console.log(`✅ Comment found, deleting...`);
     await this.commentRepository.remove(comment);
 
-    // ✅ Fetch updated comment count after deletion
     const updatedPost = await this.postRepository.findOne(postId, {
-      relations: ['comments'], // Ensure we get updated comments count
+      relations: ['comments'],
     });
-
-    console.log(`✅ Successfully deleted comment ID: ${commentId}`);
 
     return {
       message: 'Comment deleted successfully',

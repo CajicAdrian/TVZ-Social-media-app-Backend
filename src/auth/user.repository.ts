@@ -20,9 +20,6 @@ export class UserRepository extends Repository<User> {
     const { username, password } = authCredentialsDto;
     const adminUsername = await IniHelper.getSetting('AdminUsername');
     const isAdmin = username === adminUsername;
-
-    console.log('🔍 DEBUG: PEPPER_VALUES from env:', process.env.PEPPER_VALUES);
-
     const user = new User();
     user.username = username;
 
@@ -30,10 +27,8 @@ export class UserRepository extends Repository<User> {
     const dynamicSalt = createHash('sha256').update(username).digest('hex');
 
     let possiblePeppers = process.env.PEPPER_VALUES?.split(',') || [];
-    console.log('🔍 PEPPER_VALUES:', possiblePeppers);
 
     if (!possiblePeppers.length) {
-      console.warn('⚠️ No valid pepper found! Generating a new one...');
       throw new InternalServerErrorException(
         'Server misconfiguration: No valid pepper found',
       );
@@ -45,27 +40,22 @@ export class UserRepository extends Repository<User> {
       .update(password + latestPepper + dynamicSalt)
       .digest('hex');
 
-    // ✅ Store password and salt
     user.passwords = [hashedPassword];
-    user.salt = dynamicSalt; // Store the salt
+    user.salt = dynamicSalt;
 
     user.role = isAdmin ? Role.ADMIN : Role.USER;
 
-    // ✅ Generate RSA Key Pair
     const { publicKey, privateKey } = generateRSAKeyPair();
     user.publicKey = publicKey;
     user.privateKey = privateKey;
 
-    try {
-      await user.save();
-      return user;
-    } catch (error) {
-      if (error.code === '23505') {
-        throw new ConflictException('Username already exists');
-      } else {
-        throw new InternalServerErrorException(error.message);
-      }
+    const existingUser = await this.findOne({ username });
+    if (existingUser) {
+      throw new ConflictException('Username already exists');
     }
+
+    await user.save();
+    return user;
   }
 
   async signIn(authCredentialsDto: AuthCredentialsDto): Promise<User> {
@@ -78,28 +68,19 @@ export class UserRepository extends Repository<User> {
 
     const dynamicSalt = user.salt;
     let possiblePeppers = process.env.PEPPER_VALUES?.split(',') || [];
-    console.log('🔍 PEPPER_VALUES:', possiblePeppers);
 
     if (!possiblePeppers.length) {
-      console.warn('⚠️ No valid pepper found! Generating a new one...');
       throw new UnauthorizedException(
         'Server misconfiguration: No valid pepper found',
       );
     }
 
-    let isValid = false;
-    for (const pepper of possiblePeppers) {
-      const hashedPassword = createHash('sha256')
+    const hashedPasswords = possiblePeppers.map((pepper) =>
+      createHash('sha256')
         .update(password + pepper + dynamicSalt)
-        .digest('hex');
-
-      if (user.passwords.includes(hashedPassword)) {
-        isValid = true;
-        break;
-      }
-    }
-
-    if (!isValid) {
+        .digest('hex'),
+    );
+    if (!hashedPasswords.some((hashed) => user.passwords.includes(hashed))) {
       throw new UnauthorizedException('Invalid credentials');
     }
 

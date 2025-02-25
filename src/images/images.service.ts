@@ -28,7 +28,7 @@ export class ImagesService {
     }
 
     const maxSize = await IniHelper.getSetting('MaxUploadSize');
-    const MaxSizeInBytes = parseInt(maxSize) * 1024; // we set in KB
+    const MaxSizeInBytes = parseInt(maxSize) * 1024;
 
     if (image.size > MaxSizeInBytes) {
       throw new BadRequestException(
@@ -36,19 +36,16 @@ export class ImagesService {
       );
     }
 
-    // Determine the correct file path
     const filePath =
       type === 'profile'
         ? `static/images/user-image/${image.filename}`
         : `static/images/post-images/${image.filename}`;
 
-    // Save the image in the database
     const uploadedImage = await this.imageRepository.createImage(
       image,
       filePath,
     );
 
-    // If it's a profile image, link it to the user
     if (type === 'profile' && userId !== null) {
       const user = await this.userRepository.findOne(userId);
       if (!user) {

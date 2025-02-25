@@ -14,10 +14,10 @@ import { LikesModule } from 'src/likes/likes.module';
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
     TypeOrmModule.forFeature([NotificationsRepository]),
-    PostsModule, // Import PostsModule for Post-related operations
-    AuthModule, // Import AuthModule for User-related operations
-    forwardRef(() => CommentsModule), // ✅ Fix circular dependency
-    forwardRef(() => LikesModule), // ✅ Fix circular dependency
+    PostsModule,
+    AuthModule,
+    forwardRef(() => CommentsModule),
+    forwardRef(() => LikesModule),
   ],
   controllers: [NotificationsController],
   providers: [NotificationsService],

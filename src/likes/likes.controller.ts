@@ -12,7 +12,6 @@ import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from 'src/auth/get-user.decorator';
 import { User } from 'src/auth/user.entity';
 import { LikesService } from './likes.service';
-import { InjectRepository } from '@nestjs/typeorm';
 import { PostsService } from 'src/posts/posts.service';
 import { CommentsService } from 'src/comments/comments.service';
 
@@ -21,7 +20,7 @@ import { CommentsService } from 'src/comments/comments.service';
 export class LikesController {
   constructor(
     private likesService: LikesService,
-    private postsService: PostsService, // ✅ Inject PostsService
+    private postsService: PostsService,
     private commentsService: CommentsService,
   ) {}
 
@@ -40,7 +39,7 @@ export class LikesController {
     @Param('commentId', ParseIntPipe) commentId: number,
     @GetUser() user: User,
   ) {
-    const comment = await this.commentsService.getCommentById(commentId); // ✅ Fetch comment
+    const comment = await this.commentsService.getCommentById(commentId);
     return this.likesService.createLike(commentId, user, 'comment');
   }
 
@@ -58,7 +57,7 @@ export class LikesController {
     @Param('commentId', ParseIntPipe) commentId: number,
     @GetUser() user: User,
   ): Promise<void> {
-    const comment = await this.commentsService.getCommentById(commentId); // ✅ Fetch comment
-    return this.likesService.deleteLike(comment, user, 'comment'); // ✅ Pass the full comment object
+    const comment = await this.commentsService.getCommentById(commentId);
+    return this.likesService.deleteLike(comment, user, 'comment');
   }
 }

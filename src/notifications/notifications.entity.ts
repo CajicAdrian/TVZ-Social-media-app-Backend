@@ -20,7 +20,7 @@ export class Notification extends BaseEntity {
     enum: ['like', 'comment', 'like_comment'],
     nullable: false,
   })
-  type: 'like' | 'comment' | 'like_comment'; // Add 'comment' type here
+  type: 'like' | 'comment' | 'like_comment';
 
   @ManyToOne(() => User, (user) => user.notifications, {
     onDelete: 'CASCADE',
@@ -31,19 +31,19 @@ export class Notification extends BaseEntity {
   fromUser: User;
 
   @ManyToOne(() => Post, (post) => post.notifications, {
-    onDelete: 'CASCADE', // ✅ Ensures notifications are deleted when the post is deleted
-    nullable: true, // ✅ Prevents blocking deletion
+    onDelete: 'CASCADE',
+    nullable: true,
   })
   post?: Post;
 
-  @Column({ nullable: true }) // ✅ New lookup field
-  postTitle: string; // ✅ Stores post title at notification creation
+  @Column({ nullable: true })
+  postTitle: string;
 
   @ManyToOne(() => Comment, (comment) => comment.notifications, {
     nullable: true,
     onDelete: 'CASCADE',
   })
-  comment?: Comment; // ✅ Add for comment likes
+  comment?: Comment;
 
   @CreateDateColumn()
   createdAt: Date;

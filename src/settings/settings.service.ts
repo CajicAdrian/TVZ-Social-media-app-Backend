@@ -4,22 +4,19 @@ import { IniHelper } from '../utils/ini.helper';
 
 @Injectable()
 export class SettingsService {
-  // ✅ Get Like Notifications setting
   async getLikeNotifications(userId: number): Promise<boolean> {
     const value = await RegistryHelper.getSetting(userId, 'likeNotifications');
-    return value === '1'; // Convert '1' to true, '0' to false
+    return value === '1';
   }
 
-  // ✅ Get Comment Notifications setting
   async getCommentNotifications(userId: number): Promise<boolean> {
     const value = await RegistryHelper.getSetting(
       userId,
       'commentNotifications',
     );
-    return value === '1'; // Convert '1' to true, '0' to false
+    return value === '1';
   }
 
-  // ✅ Toggle Like Notifications setting
   async updateLikeNotifications(
     userId: number,
     enabled: boolean,
@@ -27,7 +24,6 @@ export class SettingsService {
     await RegistryHelper.setSetting(userId, 'likeNotifications', enabled);
   }
 
-  // ✅ Toggle Comment Notifications setting
   async updateCommentNotifications(
     userId: number,
     enabled: boolean,
@@ -35,36 +31,19 @@ export class SettingsService {
     await RegistryHelper.setSetting(userId, 'commentNotifications', enabled);
   }
 
-  async getNotificationRefreshRate(userId: number): Promise<string> {
-    const value = await RegistryHelper.getSetting(
-      userId,
-      'notificationRefreshRate',
-    );
-    return value || '30s'; // Default to 30s if not set
-  }
-
-  async updateNotificationRefreshRate(
-    userId: number,
-    rate: string,
-  ): Promise<void> {
-    await RegistryHelper.setSetting(userId, 'notificationRefreshRate', rate);
-  }
   async getUserLanguage(userId: number): Promise<string> {
     return await RegistryHelper.getSetting(userId, 'language');
   }
 
-  // ✅ Update User Language
   async updateUserLanguage(userId: number, language: string): Promise<void> {
     await RegistryHelper.setSetting(userId, 'language', language);
   }
 
-  // ✅ Get User Dark Mode Preference
   async getUserTheme(userId: number): Promise<string> {
     const darkMode = await RegistryHelper.getSetting(userId, 'darkMode');
-    return darkMode === 'dark' ? 'dark' : 'light'; // ✅ Always return "dark" or "light"
+    return darkMode === 'dark' ? 'dark' : 'light';
   }
 
-  // ✅ Update User Dark Mode Preference
   async updateUserTheme(userId: number, darkMode: string): Promise<void> {
     if (darkMode !== 'dark' && darkMode !== 'light') {
       throw new Error('Invalid theme value. Must be "dark" or "light".');
@@ -94,32 +73,27 @@ export class SettingsService {
       commentNotifications: commentNotifications === '1',
       notificationRefreshRate: refreshRate,
     };
-  } // ✅ Get Admin Username
+  }
   async getAdminUsername(): Promise<string> {
     return await IniHelper.getSetting('AdminUsername');
   }
 
-  // ✅ Update Admin Username
   async updateAdminUsername(newUsername: string): Promise<void> {
     await IniHelper.setSetting('AdminUsername', newUsername);
   }
 
-  // ✅ Get Max Upload Size
   async getMaxUploadSize(): Promise<string> {
     return await IniHelper.getSetting('MaxUploadSize');
   }
 
-  // ✅ Update Max Upload Size
   async updateMaxUploadSize(newSize: string): Promise<void> {
     await IniHelper.setSetting('MaxUploadSize', newSize);
   }
 
-  // ✅ Get Cache Expiration Time
   async getTokenExpirationTime(): Promise<string> {
     return await IniHelper.getSetting('TokenExpirationTime');
   }
 
-  // ✅ Update Cache Expiration Time
   async updateTokenExpirationTime(newTime: string): Promise<void> {
     await IniHelper.setSetting('TokenExpirationTime', newTime);
   }

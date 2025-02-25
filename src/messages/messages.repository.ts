@@ -28,10 +28,7 @@ export class MessageRepository extends Repository<Message> {
     }
 
     const { encryptedMessage, iv, secretKey } = aesEncrypt(message);
-
     const encryptedAESKey = rsaEncryptAESKey(secretKey, recipient.publicKey);
-    console.log('🔍 DEBUG: Signing Message (UTF-8):', message);
-
     const senderSignature = signMessage(message, sender.privateKey);
 
     const newMessage = this.create({
@@ -50,27 +47,23 @@ export class MessageRepository extends Repository<Message> {
     messageId: number,
     userId: number,
   ): Promise<Message> {
-    // ✅ Find the message
     const message = await this.findOne({ where: { id: messageId } });
 
     if (!message || message.receiverId !== userId) {
       throw new Error('Message not found or unauthorized.');
     }
 
-    // ✅ Find the recipient to retrieve their private key
     const recipient = await User.findOne({ where: { id: userId } });
 
     if (!recipient) {
       throw new Error('Recipient not found.');
     }
 
-    // ✅ Sign the message using the recipient’s private key
     const recipientSignature = signMessage(
       message.encryptedMessage,
       recipient.privateKey,
     );
 
-    // ✅ Store recipient's signature in the database
     message.recipientSignature = recipientSignature;
 
     return this.save(message);
@@ -102,23 +95,12 @@ export class MessageRepository extends Repository<Message> {
         const recipient = userMap.get(message.receiverId);
 
         if (!sender || !recipient) {
-          console.error('❌ ERROR: Sender or recipient not found.');
           return { ...message, message: '[Decryption Failed]' };
         }
-
-        console.log(
-          '🔍 DEBUG: Sender Public Key (truncated):',
-          sender.publicKey.substring(0, 50) + '...',
-        );
-
         try {
           const decryptedAESKey = rsaDecryptAESKey(
             message.encryptedAESKey,
             recipient.privateKey,
-          );
-          console.log(
-            '✅ DEBUG: Successfully Decrypted AES Key:',
-            decryptedAESKey.toString('hex'),
           );
 
           const decryptedMessage = aesDecrypt(
@@ -126,11 +108,7 @@ export class MessageRepository extends Repository<Message> {
             message.iv,
             decryptedAESKey,
           );
-          console.log('✅ DEBUG: Decrypted Message:', decryptedMessage);
 
-          console.log('🔍 DEBUG: Verifying Message (UTF-8):', message);
-
-          // ✅ Verify digital signatures
           const isValidSenderSignature = verifySignature(
             decryptedMessage,
             message.senderSignature,
@@ -143,15 +121,14 @@ export class MessageRepository extends Repository<Message> {
                 message.recipientSignature,
                 recipient.publicKey,
               )
-            : true; // ✅ If no recipient signature, assume valid
+            : true;
 
           if (!isValidSenderSignature || !isValidRecipientSignature) {
-            console.warn('⚠️ WARNING: Message signature is invalid!');
             return {
               id: message.id,
               senderId: message.senderId,
               receiverId: message.receiverId,
-              message: '[Message Verification Failed]', // ❌ Show warning if signature is bad
+              message: '[Message Verification Failed]',
               senderVerified: isValidSenderSignature,
               recipientVerified: isValidRecipientSignature,
               createdAt: message.createdAt,
@@ -162,18 +139,17 @@ export class MessageRepository extends Repository<Message> {
             id: message.id,
             senderId: message.senderId,
             receiverId: message.receiverId,
-            message: decryptedMessage, // ✅ Return verified message
+            message: decryptedMessage,
             senderVerified: true,
             recipientVerified: true,
             createdAt: message.createdAt,
           };
         } catch (error) {
-          console.error('❌ ERROR: Decryption Failed:', error.message);
           return {
             id: message.id,
             senderId: message.senderId,
             receiverId: message.receiverId,
-            message: '[Decryption Failed]', // ❌ Fallback if decryption fails
+            message: '[Decryption Failed]',
             senderVerified: false,
             recipientVerified: false,
             createdAt: message.createdAt,

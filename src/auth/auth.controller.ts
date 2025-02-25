@@ -24,7 +24,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
 
 interface RequestWithUser extends Request {
-  user?: { id: number }; // Ensure `id` exists in `req.user`
+  user?: { id: number };
 }
 
 @Controller('auth')
@@ -37,16 +37,10 @@ export class AuthController {
     return this.authService.getAllUsers();
   }
 
-  @UseGuards(AuthGuard('jwt')) // ✅ Ensures user is authenticated
+  @UseGuards(AuthGuard('jwt'))
   @Get('/me')
-  async getCurrentUser(@Req() req: RequestWithUser): Promise<User> {
-    console.log('✅ Request User:', req.user); // Debugging
-
-    if (!req.user || !req.user.id) {
-      throw new Error('User is missing from request');
-    }
-
-    return this.authService.getUserById(req.user.id);
+  async getCurrentUser(@GetUser() user: User): Promise<User> {
+    return this.authService.getUserById(user.id);
   }
 
   @Get('/getallusers/exceptme')
@@ -59,8 +53,6 @@ export class AuthController {
   signUp(
     @Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto,
   ): Promise<User> {
-    console.log('🛠️ SIGNUP ROUTE HIT');
-
     return this.authService.signUp(authCredentialsDto);
   }
 
@@ -98,13 +90,6 @@ export class AuthController {
     @GetUser() user: User,
     @Body() updateSettingsDto: UpdateSettingsDto,
   ): Promise<{ user: User; newToken: string }> {
-    // ✅ Correct Return Type
-    console.log('🔍 Received update request from user:', user);
-
-    if (!user) {
-      throw new UnauthorizedException('User not found in request');
-    }
-
     return this.authService.updateUserSettings(user.id, updateSettingsDto);
   }
 
@@ -117,7 +102,6 @@ export class AuthController {
     if (user.role === Role.ADMIN || user.id === userId) {
       await this.authService.deleteUser(userId);
     } else {
-      console.error(`❌ Permission Denied - User Role: ${user.role}`);
       throw new ForbiddenException(
         "You don't have permission to delete this user",
       );

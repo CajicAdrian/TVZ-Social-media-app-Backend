@@ -55,9 +55,6 @@ export class CommentsController {
     @Body() updateCommentDto: UpdateCommentDto,
     @GetUser() user: User,
   ): Promise<Comment> {
-    console.log(
-      `📢 Updating Comment - PostID: ${postId}, CommentID: ${commentId}`,
-    );
     return this.commentsService.updateComment(
       postId,
       commentId,
@@ -72,9 +69,6 @@ export class CommentsController {
     @Param('commentId', ParseIntPipe) commentId: number,
     @GetUser() user: User,
   ): Promise<{ message: string; commentCount: number }> {
-    console.log(
-      `🗑️ Deleting Comment - PostID: ${postId}, CommentID: ${commentId}`,
-    );
     return this.commentsService.deleteComment(postId, commentId, user);
   }
 }

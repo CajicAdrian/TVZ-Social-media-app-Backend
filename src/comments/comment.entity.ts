@@ -21,25 +21,25 @@ export class Comment extends BaseEntity {
   @Column()
   content: string;
 
-  @ManyToOne(() => User, (user) => user.comments, { eager: false }) // ✅ Ensure relation
+  @ManyToOne(() => User, (user) => user.comments, { eager: false })
   user: User;
 
   @ManyToOne(() => Post, (post) => post.comments, { eager: false })
   post: Post;
 
   @CreateDateColumn()
-  createdAt: Date; // ✅ Store comment timestamp
+  createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => Like, (like) => like.comment, { cascade: true }) // ✅ Link likes
+  @OneToMany(() => Like, (like) => like.comment, { cascade: true })
   likes: Like[];
 
   @OneToMany(() => Notification, (notification) => notification.comment, {
     cascade: true,
     nullable: true,
-  }) // ✅ Link notifications for comment likes
+  })
   notifications: Notification[];
 
   likeCount(): number {

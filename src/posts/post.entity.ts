@@ -10,7 +10,6 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinTable,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -27,7 +26,7 @@ export class Post extends BaseEntity {
   @Column()
   description: string;
 
-  @CreateDateColumn() // ✅ Automatically stores post creation date
+  @CreateDateColumn()
   createdAt: Date;
 
   @ManyToOne(() => User, (user) => user.posts, {
@@ -51,8 +50,8 @@ export class Post extends BaseEntity {
   images: Image[];
 
   @OneToMany(() => Notification, (notification) => notification.post, {
-    cascade: true, // ✅ Ensures notifications are deleted with the post
-    onDelete: 'CASCADE', // ✅ Deletes all notifications when the post is deleted
+    cascade: true,
+    onDelete: 'CASCADE',
   })
   notifications: Notification[];
 
@@ -60,7 +59,6 @@ export class Post extends BaseEntity {
     return user.isAdmin() || this.user.id === user.id;
   }
 
-  // ✅ Check if a user can delete this post
   canUserDelete(user: User): boolean {
     return user.isAdmin() || this.user.id === user.id;
   }

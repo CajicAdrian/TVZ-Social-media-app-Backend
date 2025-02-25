@@ -11,13 +11,13 @@ export class NotificationsRepository extends Repository<Notification> {
     user: User,
     fromUser: User,
     post?: Post,
-    comment?: Comment, // ✅ Add comment support
+    comment?: Comment,
   ): Promise<Notification> {
     const notification = this.create({
       type,
       user,
       fromUser,
-      comment: comment || null, // ✅ Ensure comments are stored
+      comment: comment || null,
       postTitle: post ? post.title : null,
     });
     return this.save(notification);

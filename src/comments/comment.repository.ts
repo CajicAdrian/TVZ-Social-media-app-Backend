@@ -19,9 +19,9 @@ export class CommentRepository extends Repository<Comment> {
     const ids = commentInfo.map((info) => info.id);
 
     const query = this.createQueryBuilder('comment')
-      .leftJoinAndSelect('comment.user', 'user') // ✅ Ensure user details are included
-      .leftJoinAndSelect('comment.likes', 'likes') // ✅ Include likes
-      .leftJoinAndSelect('likes.user', 'likedUser') // ✅ Ensure like users are included
+      .leftJoinAndSelect('comment.user', 'user')
+      .leftJoinAndSelect('comment.likes', 'likes')
+      .leftJoinAndSelect('likes.user', 'likedUser')
       .whereInIds(ids);
 
     const comments = await query.getMany();
@@ -29,12 +29,12 @@ export class CommentRepository extends Repository<Comment> {
     return comments.map((comment) => ({
       id: comment.id,
       content: comment.content,
-      createdAt: comment.createdAt, // ✅ Return timestamp
+      createdAt: comment.createdAt,
       user: comment.user
         ? { id: comment.user.id, name: comment.user.username }
         : null,
-      likeCount: comment.likeCount(), // ✅ Return total likes
-      isLikedByUser: comment.isLikedByUser(user), // ✅ Return if user liked it
+      likeCount: comment.likeCount(),
+      isLikedByUser: comment.isLikedByUser(user),
     }));
   }
 

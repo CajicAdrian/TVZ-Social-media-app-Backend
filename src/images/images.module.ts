@@ -4,7 +4,6 @@ import { ImagesService } from './images.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ImageRepository } from './image.repository';
 import { UserRepository } from 'src/auth/user.repository';
-import { AuthModule } from 'src/auth/auth.module';
 import { PassportModule } from '@nestjs/passport';
 
 @Module({
