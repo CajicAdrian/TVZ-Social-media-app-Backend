@@ -34,9 +34,17 @@ export class CommentsService {
       user,
     );
 
+    const postWithOwner = await this.postRepository.findOne(post.id, {
+      relations: ['user'],
+    });
+
+    if (!postWithOwner || !postWithOwner.user) {
+      throw new NotFoundException(`Post owner not found for post ${post.id}`);
+    }
+
     await this.notificationsService.createNotification(
       'comment',
-      post.user,
+      postWithOwner.user,
       user,
       post,
     );

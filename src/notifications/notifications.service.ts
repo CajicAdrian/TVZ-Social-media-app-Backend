@@ -19,11 +19,19 @@ export class NotificationsService {
 
   async createNotification(
     type: 'like' | 'comment' | 'like_comment',
-    user: User,
+    user: User, // ❌ This might still be wrong!
     fromUser: User,
     post?: Post,
     comment?: Comment,
   ): Promise<Notification | null> {
+    if (!user || !fromUser) {
+      return null;
+    }
+
+    if (user.id === fromUser.id) {
+      return null;
+    }
+
     const settingKey =
       type === 'comment' ? 'commentNotifications' : 'likeNotifications';
     const isEnabled = await RegistryHelper.getSetting(user.id, settingKey);
@@ -52,28 +60,10 @@ export class NotificationsService {
       comment,
       postTitle,
     });
-
     const savedNotification = await this.notificationsRepository.save(
       notification,
     );
 
-    const client = new net.Socket();
-    client.connect(4000, 'localhost', () => {
-      const message = JSON.stringify({
-        id: savedNotification.id,
-        type: savedNotification.type,
-        createdAt: savedNotification.createdAt,
-        fromUser: {
-          id: savedNotification.fromUser.id,
-          username: savedNotification.fromUser.username,
-          profileImage: savedNotification.fromUser.profileImage || '',
-        },
-        postTitle: savedNotification.postTitle || 'Unknown Post',
-      });
-
-      client.write(message);
-      client.end();
-    });
     return savedNotification;
   }
 
